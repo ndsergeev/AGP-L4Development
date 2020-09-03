@@ -14,21 +14,18 @@ class ADVGAMESPROGRAMMING_API UNoiseNotify : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UNoiseNotify();
 
 	AActor* Owner;
 
     UPROPERTY(EditAnywhere)
 	    AAIManager* AIManager;
-
-
+    
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 public:
     UFUNCTION(BlueprintCallable)
-    void OnAINotify(const FVector& NoisePosition, const float& Volume);
+        void OnAINotify(const FVector& NoisePosition, const float& Volume);
 
 };
