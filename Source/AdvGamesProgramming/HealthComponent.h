@@ -7,12 +7,12 @@
 #include "HealthComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ADVGAMESPROGRAMMING_API UHealthComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UHealthComponent();
 
@@ -20,21 +20,21 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-	float MaxHealth;
+		float MaxHealth;
 
 	UPROPERTY(BlueprintReadOnly)
-	float CurrentHealth;
+		float CurrentHealth;
 
 	UFUNCTION(BlueprintCallable)
-	void OnTakeDamage(float Damage);
+		void OnTakeDamage(float Damage);
 
 	UFUNCTION(BlueprintCallable)
-	void OnDeath();
+		void OnDeath();
 
 	float HealthPercentageRemaining();
 };

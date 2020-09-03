@@ -10,7 +10,7 @@
 // Sets default values
 AAIManager::AAIManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -19,7 +19,7 @@ AAIManager::AAIManager()
 void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	PopulateNodes();
 	CreateAgents();
 }
@@ -33,6 +33,10 @@ void AAIManager::Tick(float DeltaTime)
 
 TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, ANavigationNode* EndNode)
 {
+	if (StartNode == EndNode)
+	{
+		return TArray<ANavigationNode*>();
+	}
 
 	TArray<ANavigationNode*> OpenSet;
 	for (ANavigationNode* Node : AllNodes)
@@ -59,7 +63,8 @@ TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, AN
 
 		OpenSet.Remove(CurrentNode);
 
-		if (CurrentNode == EndNode) {
+		if (CurrentNode == EndNode)
+		{
 			TArray<ANavigationNode*> Path;
 			Path.Push(EndNode);
 			CurrentNode = EndNode;
@@ -104,7 +109,7 @@ void AAIManager::CreateAgents()
 {
 	for (int32 i = 0; i < NumAI; i++)
 	{
-		int32 RandIndex = FMath::RandRange(0, AllNodes.Num()-1);
+		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
 		AEnemyCharacter* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->GetActorLocation(), FRotator(0.f, 0.f, 0.f));
 		Agent->Manager = this;
 		Agent->CurrentNode = AllNodes[RandIndex];
@@ -127,7 +132,7 @@ ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName())
+	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName());
 	return NearestNode;
 }
 
@@ -146,7 +151,7 @@ ANavigationNode* AAIManager::FindFurthestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName())
+	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName());
 	return FurthestNode;
 }
 

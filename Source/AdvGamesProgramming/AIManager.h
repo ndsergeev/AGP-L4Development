@@ -13,8 +13,8 @@ UCLASS()
 class ADVGAMESPROGRAMMING_API AAIManager : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AAIManager();
 
@@ -22,18 +22,18 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, Category="AI Properties")
-	int32 NumAI;
+	UPROPERTY(EditAnywhere, Category = "AI Properties")
+		int32 NumAI;
 	UPROPERTY(VisibleAnywhere, Category = "Navigation Nodes")
-	TArray<ANavigationNode*> AllNodes;
+		TArray<ANavigationNode*> AllNodes;
 	UPROPERTY(VisibleAnywhere, Category = "Agents")
-	TArray<AEnemyCharacter*> AllAgents;
+		TArray<AEnemyCharacter*> AllAgents;
 	UPROPERTY(EditAnywhere, Category = "Agents")
-	TSubclassOf<AEnemyCharacter> AgentToSpawn;
+		TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
 	TArray<ANavigationNode*> GeneratePath(ANavigationNode* StartNode, ANavigationNode* EndNode);
 

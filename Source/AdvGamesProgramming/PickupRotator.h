@@ -7,12 +7,12 @@
 #include "PickupRotator.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ADVGAMESPROGRAMMING_API UPickupRotator : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UPickupRotator();
 
@@ -20,7 +20,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -28,5 +28,5 @@ public:
 
 private:
 	UPROPERTY(EditInstanceOnly)
-	float RotSpeed;
+		float RotSpeed;
 };

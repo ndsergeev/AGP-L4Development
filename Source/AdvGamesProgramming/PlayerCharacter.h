@@ -20,7 +20,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,10 +37,10 @@ public:
 
 private:
 	UPROPERTY(EditInstanceOnly)
-	float LookSensitivity;
+		float LookSensitivity;
 
 	UPROPERTY(EditInstanceOnly)
-	float SprintMultiplier;
+		float SprintMultiplier;
 
 	UCameraComponent* Camera;
 };

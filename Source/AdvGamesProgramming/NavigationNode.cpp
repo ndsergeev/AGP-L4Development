@@ -6,7 +6,7 @@
 // Sets default values
 ANavigationNode::ANavigationNode()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	LocationComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Location Component"));
@@ -20,9 +20,9 @@ void ANavigationNode::BeginPlay()
 
 	for (auto It = ConnectedNodes.CreateConstIterator(); It; ++It)
 	{
-		DrawDebugLine(GetWorld(), GetActorLocation(), (*It)->GetActorLocation(), FColor::Blue, true);
+		DrawDebugLine(GetWorld(), GetActorLocation(), (*It)->GetActorLocation(), FColor::Blue, true, -1.0f, '\000', 6.0f);
 	}
-	
+
 }
 
 // Called every frame

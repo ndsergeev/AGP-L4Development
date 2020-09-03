@@ -10,8 +10,8 @@ UCLASS()
 class ADVGAMESPROGRAMMING_API ANavigationNode : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ANavigationNode();
 
@@ -19,12 +19,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category = "Connected Nodes")
-	TArray<ANavigationNode*> ConnectedNodes;
+		TArray<ANavigationNode*> ConnectedNodes;
 
 	USceneComponent* LocationComponent;
 
