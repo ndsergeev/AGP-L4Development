@@ -18,7 +18,6 @@ public:
 
     UPROPERTY(EditAnywhere)
 	    AAIManager* AIManager;
-
 protected:
 	virtual void BeginPlay() override;
 
