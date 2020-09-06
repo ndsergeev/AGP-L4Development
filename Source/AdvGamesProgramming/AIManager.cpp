@@ -1,38 +1,33 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "AIManager.h"
 #include "EngineUtils.h"
 #include "EnemyCharacter.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 
-// Sets default values
 AAIManager::AAIManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+	PrimaryActorTick.bCanEverTick = false;
 }
 
-// Called when the game starts or when spawned
 void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	PopulateNodes();
 	CreateAgents();
 }
 
-// Called every frame
-void AAIManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
+//void AAIManager::Tick(float DeltaTime)
+//{
+//	Super::Tick(DeltaTime);
+//}
 
 TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, ANavigationNode* EndNode)
 {
+	if (StartNode == EndNode)
+	{
+		return TArray<ANavigationNode*>();
+	}
 
 	TArray<ANavigationNode*> OpenSet;
 	for (ANavigationNode* Node : AllNodes)
@@ -59,7 +54,8 @@ TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, AN
 
 		OpenSet.Remove(CurrentNode);
 
-		if (CurrentNode == EndNode) {
+		if (CurrentNode == EndNode)
+		{
 			TArray<ANavigationNode*> Path;
 			Path.Push(EndNode);
 			CurrentNode = EndNode;
@@ -71,23 +67,23 @@ TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, AN
 			return Path;
 		}
 
-		for (ANavigationNode* ConnectedNode : CurrentNode->ConnectedNodes)
+		for (auto& ConnectedNode : CurrentNode->ConnectedNodes)
 		{
-			float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
-			if (TentativeGScore < ConnectedNode->GScore)
+            //float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
+            float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
+			if (TentativeGScore < ConnectedNode.Key->GScore)
 			{
-				ConnectedNode->CameFrom = CurrentNode;
-				ConnectedNode->GScore = TentativeGScore;
-				ConnectedNode->HScore = FVector::Distance(ConnectedNode->GetActorLocation(), EndNode->GetActorLocation());
-				if (!OpenSet.Contains(ConnectedNode))
+				ConnectedNode.Key->CameFrom = CurrentNode;
+                ConnectedNode.Key->GScore = TentativeGScore;
+                ConnectedNode.Key->HScore = FVector::Distance(ConnectedNode.Key->GetActorLocation(), EndNode->GetActorLocation());
+				if (!OpenSet.Contains(ConnectedNode.Key))
 				{
-					OpenSet.Add(ConnectedNode);
+					OpenSet.Add(ConnectedNode.Key);
 				}
 			}
 		}
 	}
 
-	//If it leaves this loop without finding the end node then return an empty path.
 	//UE_LOG(LogTemp, Error, TEXT("NO PATH FOUND"));
 	return TArray<ANavigationNode*>();
 }
@@ -104,8 +100,8 @@ void AAIManager::CreateAgents()
 {
 	for (int32 i = 0; i < NumAI; i++)
 	{
-		int32 RandIndex = FMath::RandRange(0, AllNodes.Num()-1);
-		AEnemyCharacter* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
+		auto Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->GetActorLocation(), FRotator::ZeroRotator);
 		Agent->Manager = this;
 		Agent->CurrentNode = AllNodes[RandIndex];
 		AllAgents.Add(Agent);
@@ -116,10 +112,11 @@ ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 {
 	ANavigationNode* NearestNode = nullptr;
 	float NearestDistance = TNumericLimits<float>::Max();
-	//Loop through the nodes and find the nearest one in distance
 	for (ANavigationNode* CurrentNode : AllNodes)
 	{
-		float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+	    // there is no point in making SQRT in Distance, refer to Magnitude calculation
+        // float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+		float CurrentNodeDistance = FVector::DistSquared(Location, CurrentNode->GetActorLocation());
 		if (CurrentNodeDistance < NearestDistance)
 		{
 			NearestDistance = CurrentNodeDistance;
@@ -127,7 +124,7 @@ ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName())
+	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName());
 	return NearestNode;
 }
 
@@ -135,10 +132,11 @@ ANavigationNode* AAIManager::FindFurthestNode(const FVector& Location)
 {
 	ANavigationNode* FurthestNode = nullptr;
 	float FurthestDistance = 0.0f;
-	//Loop through the nodes and find the nearest one in distance
 	for (ANavigationNode* CurrentNode : AllNodes)
 	{
-		float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+        // there is no point in making SQRT in Distance, refer to Magnitude calculation
+        // float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+        float CurrentNodeDistance = FVector::DistSquared(Location, CurrentNode->GetActorLocation());
 		if (CurrentNodeDistance > FurthestDistance)
 		{
 			FurthestDistance = CurrentNodeDistance;
@@ -146,7 +144,7 @@ ANavigationNode* AAIManager::FindFurthestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName())
+	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName());
 	return FurthestNode;
 }
 
