@@ -51,7 +51,6 @@ public:
 	void PopulateNodes();
 	void CreateAgents();
 
-	UPROPERTY(VisibleAnywhere)
-		FVector LastNoisePosition;
+	void NotifyAgents(const FVector& NoisePosition, const float& Volume);
 
 };

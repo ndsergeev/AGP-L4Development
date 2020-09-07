@@ -108,6 +108,20 @@ void AAIManager::CreateAgents()
 	}
 }
 
+void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
+{
+	for (auto& Agent : AllAgents)
+	{
+		if (FVector::Dist(NoisePosition, Agent->GetActorLocation()) < (Volume * 1000))
+		{
+			Agent->UpdateState(AgentState::SEARCH);
+			Agent->LastNoisePosition = NoisePosition;
+			Agent->Path.Empty();
+			UE_LOG(LogTemp, Error, TEXT("NotifyAgents - NoisePosition: %s"), *NoisePosition.ToString());
+		}
+	}
+}
+
 ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 {
 	ANavigationNode* NearestNode = nullptr;

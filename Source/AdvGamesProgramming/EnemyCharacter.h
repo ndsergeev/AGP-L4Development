@@ -69,6 +69,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void Fire(FVector FireDirection);
 
+	UPROPERTY(VisibleAnywhere)
+		FVector LastNoisePosition;
+
 private:
 	void MoveAlongPath();
 
