@@ -60,6 +60,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void UpdateState(AgentState NewState);
+
 	// State definitions:
 	void AgentPatrol();
 	void AgentEngage();

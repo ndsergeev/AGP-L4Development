@@ -53,4 +53,7 @@ public:
 	void PopulateNodes();
 	void CreateAgents();
 
+	UPROPERTY(VisibleAnywhere)
+		FVector LastNoisePosition;
+
 };

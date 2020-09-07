@@ -38,80 +38,92 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	switch (CurrentAgentState) {
-	case (AgentState::PATROL):
-		AgentPatrol();
-
-		if (bCanSeeActor)
+	switch (CurrentAgentState)
+	{
+		case (AgentState::PATROL):
 		{
-			if (HealthComponent->HealthPercentageRemaining() < 0.4f)
+			AgentPatrol();
+
+			if (bCanSeeActor)
 			{
-				CurrentAgentState = AgentState::EVADE;
+				if (HealthComponent->HealthPercentageRemaining() < 0.4f)
+				{
+					UpdateState(AgentState::EVADE);
+				}
+				else
+				{
+					UpdateState(AgentState::ENGAGE);
+				}
+			}
+			else if (bHeardActor)
+			{
+				UpdateState(AgentState::SEARCH);
+			}
+
+			break;
+		}
+
+		case (AgentState::ENGAGE):
+		{
+			AgentEngage();
+
+			if (bCanSeeActor)
+			{
+				if (HealthComponent->HealthPercentageRemaining() < 0.4f)
+				{
+					UpdateState(AgentState::EVADE);
+					Path.Empty();
+				}
 			}
 			else
 			{
-				CurrentAgentState = AgentState::ENGAGE;
+				UpdateState(AgentState::PATROL);
 			}
+			break;
 		}
-		else if (bHeardActor)
+		case (AgentState::EVADE):
 		{
-			CurrentAgentState = AgentState::SEARCH;
-		}
+			AgentEvade();
 
-		break;
-
-	case (AgentState::ENGAGE):
-		AgentEngage();
-
-		if (bCanSeeActor)
-		{
-			if (HealthComponent->HealthPercentageRemaining() < 0.4f)
+			if (bCanSeeActor)
 			{
-				CurrentAgentState = AgentState::EVADE;
-				Path.Empty();
-			}
-		}
-		else
-		{
-			CurrentAgentState = AgentState::PATROL;
-		}
-		break;
-
-	case (AgentState::EVADE):
-		AgentEvade();
-
-		if (bCanSeeActor)
-		{
-			if (HealthComponent->HealthPercentageRemaining() >= 0.4f)
-			{
-				CurrentAgentState = AgentState::ENGAGE;
-				Path.Empty();
-			}
-		}
-		else
-		{
-			CurrentAgentState = AgentState::PATROL;
-		}
-		break;
-
-	case (AgentState::SEARCH):
-		AgentSearch();
-
-		if (bCanSeeActor)
-		{
-			if (HealthComponent->HealthPercentageRemaining() < 0.4f)
-			{
-				CurrentAgentState = AgentState::EVADE;
+				if (HealthComponent->HealthPercentageRemaining() >= 0.4f)
+				{
+					UpdateState(AgentState::ENGAGE);
+					Path.Empty();
+				}
 			}
 			else
 			{
-				CurrentAgentState = AgentState::ENGAGE;
+				UpdateState(AgentState::PATROL);
 			}
+			break;
 		}
+		case (AgentState::SEARCH):
+		{
+			AgentSearch();
 
-		// if nothing was found:
-		// CurrentAgentState = AgentState::PATROL;
-		break;
+			if (bCanSeeActor)
+			{
+				if (HealthComponent->HealthPercentageRemaining() < 0.4f)
+				{
+					UpdateState(AgentState::EVADE);
+					bHeardActor = false;
+				}
+				else
+				{
+					UpdateState(AgentState::ENGAGE);
+					bHeardActor = false;
+				}
+			}
+
+			if (Path.Num() == 0)
+			{
+				UpdateState(AgentState::PATROL);
+				bHeardActor = false;
+			}
+			break;
+		}
 	}
 
 	MoveAlongPath();
@@ -124,6 +136,33 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+void AEnemyCharacter::UpdateState(AgentState NewState)
+{
+	FString State = "";
+
+	switch (CurrentAgentState)
+	{
+		case (AgentState::PATROL):
+			State = "PATROL";
+			break;
+		case (AgentState::ENGAGE):
+			State = "ENGAGE";
+			break;
+		case (AgentState::EVADE):
+			State = "EVADE";
+			break;
+		case (AgentState::SEARCH):
+			State = "SEARCH";
+			break;
+		default:
+			State = "Other";
+			break;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("New Agent State: %s"), *State);
+	CurrentAgentState = NewState;
+}
+
 void AEnemyCharacter::AgentPatrol()
 {
 	if (Path.Num() == 0 && Manager != NULL)
@@ -131,6 +170,7 @@ void AEnemyCharacter::AgentPatrol()
 		Path = Manager->GeneratePath(CurrentNode, Manager->AllNodes[FMath::RandRange(0, Manager->AllNodes.Num() - 1)]);
 	}
 }
+
 void AEnemyCharacter::AgentEngage()
 {
 	if (bCanSeeActor)
@@ -146,6 +186,7 @@ void AEnemyCharacter::AgentEngage()
 		}
 	}
 }
+
 void AEnemyCharacter::AgentEvade()
 {
 	if (bCanSeeActor)
@@ -164,7 +205,17 @@ void AEnemyCharacter::AgentEvade()
 
 void AEnemyCharacter::AgentSearch()
 {
-	// Pathfind to the last known sound location
+	if (bHeardActor && Path.Num() == 0)
+	{
+		FVector NoisePosition = Manager->LastNoisePosition;
+		if (NoisePosition != FVector(999.0f, 999.0f, 999.0f))
+		{
+			UE_LOG(LogTemp, Error, TEXT("NoisePosition: %s"), *NoisePosition.ToString());
+			ANavigationNode* NearestNoiseNode = Manager->FindNearestNode(NoisePosition);
+			Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
+			Manager->LastNoisePosition = FVector(999.0f, 999.0f, 999.0f);
+		}
+	}
 }
 
 void AEnemyCharacter::MoveAlongPath()
@@ -177,7 +228,7 @@ void AEnemyCharacter::MoveAlongPath()
 			UE_LOG(LogTemp, Display, TEXT("At Node %s"), *CurrentNode->GetName());
 			CurrentNode = Path.Pop();
 			UE_LOG(LogTemp, Display, TEXT("Going to Node %s"), *CurrentNode->GetName());
-			DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->GetActorLocation(), FColor::Red, true, 3.0f, '\000', 12.0f);
+			DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->GetActorLocation(), FColor::Red, true, 1.0f, '\000', 8.0f);
 		}
 		else
 		{
@@ -197,8 +248,7 @@ void AEnemyCharacter::MoveAlongPath()
 
 void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 {
-	UE_LOG(LogTemp, Display, TEXT("Stimulus Type: %s"), *Stimulus.Type.Name.ToString());
-
+	//UE_LOG(LogTemp, Display, TEXT("Stimulus Type: %s"), *Stimulus.Type.Name.ToString());
 	StimulusType = Stimulus.Type; // Will be 'Default__AISense_Sight' or 'Default__AISense_Hearing'
 
 	if (Stimulus.WasSuccessfullySensed())
