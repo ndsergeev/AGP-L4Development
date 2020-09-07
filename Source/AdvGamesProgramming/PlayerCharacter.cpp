@@ -62,7 +62,7 @@ void APlayerCharacter::LookUp(float Value)
 	{
 		Camera->AddRelativeRotation(DeltaRotation);
 	}
-	
+
 	Camera->RelativeRotation.Yaw = 0.0f;
 	Camera->RelativeRotation.Roll = 0.0f;
 }

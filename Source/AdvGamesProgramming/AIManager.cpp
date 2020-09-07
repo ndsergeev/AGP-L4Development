@@ -69,13 +69,13 @@ TArray<ANavigationNode*> AAIManager::GeneratePath(ANavigationNode* StartNode, AN
 
 		for (auto& ConnectedNode : CurrentNode->ConnectedNodes)
 		{
-            //float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
-            float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
+			//float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
+			float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
 			if (TentativeGScore < ConnectedNode.Key->GScore)
 			{
 				ConnectedNode.Key->CameFrom = CurrentNode;
-                ConnectedNode.Key->GScore = TentativeGScore;
-                ConnectedNode.Key->HScore = FVector::Distance(ConnectedNode.Key->GetActorLocation(), EndNode->GetActorLocation());
+				ConnectedNode.Key->GScore = TentativeGScore;
+				ConnectedNode.Key->HScore = FVector::Distance(ConnectedNode.Key->GetActorLocation(), EndNode->GetActorLocation());
 				if (!OpenSet.Contains(ConnectedNode.Key))
 				{
 					OpenSet.Add(ConnectedNode.Key);
@@ -114,8 +114,8 @@ ANavigationNode* AAIManager::FindNearestNode(const FVector& Location)
 	float NearestDistance = TNumericLimits<float>::Max();
 	for (ANavigationNode* CurrentNode : AllNodes)
 	{
-	    // there is no point in making SQRT in Distance, refer to Magnitude calculation
-        // float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+		// there is no point in making SQRT in Distance, refer to Magnitude calculation
+		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
 		float CurrentNodeDistance = FVector::DistSquared(Location, CurrentNode->GetActorLocation());
 		if (CurrentNodeDistance < NearestDistance)
 		{
@@ -134,9 +134,9 @@ ANavigationNode* AAIManager::FindFurthestNode(const FVector& Location)
 	float FurthestDistance = 0.0f;
 	for (ANavigationNode* CurrentNode : AllNodes)
 	{
-        // there is no point in making SQRT in Distance, refer to Magnitude calculation
-        // float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
-        float CurrentNodeDistance = FVector::DistSquared(Location, CurrentNode->GetActorLocation());
+		// there is no point in making SQRT in Distance, refer to Magnitude calculation
+		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
+		float CurrentNodeDistance = FVector::DistSquared(Location, CurrentNode->GetActorLocation());
 		if (CurrentNodeDistance > FurthestDistance)
 		{
 			FurthestDistance = CurrentNodeDistance;

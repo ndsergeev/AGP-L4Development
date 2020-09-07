@@ -23,10 +23,13 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "AI Properties")
 		int32 NumAI;
+
 	UPROPERTY(VisibleAnywhere, Category = "Navigation Nodes")
 		TArray<ANavigationNode*> AllNodes;
+
 	UPROPERTY(VisibleAnywhere, Category = "Agents")
 		TArray<AEnemyCharacter*> AllAgents;
+
 	UPROPERTY(EditAnywhere, Category = "Agents")
 		TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
