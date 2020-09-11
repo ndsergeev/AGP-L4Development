@@ -43,6 +43,8 @@
 # *.ipr
 
 # CMake
+# Also these CMake Configurations as they might be built with UE
+CMakeLists.txt
 cmake-build-*/
 
 # Mongo Explorer plugin
