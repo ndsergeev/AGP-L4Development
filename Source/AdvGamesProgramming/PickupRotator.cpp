@@ -26,4 +26,3 @@ void UPickupRotator::TickRotateObject(const float& DeltaTime)
 	CurrentActorRotation.Yaw += DeltaTime * RotSpeed;
 	GetOwner()->SetActorRotation(CurrentActorRotation);
 }
-

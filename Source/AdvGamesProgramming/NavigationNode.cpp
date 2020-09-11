@@ -19,7 +19,7 @@ void ANavigationNode::BeginPlay()
 	for (auto It = ConnectedNodes.CreateIterator(); It; ++It)
 	{
 		It.Value() = FVector::Distance(GetActorLocation(), It.Key()->GetActorLocation());
-        //DrawDebugLine(GetWorld(), GetActorLocation(), It->Key->GetActorLocation(), FColor::Blue, true, -1.0f, '\000', 6.0f);
+		//DrawDebugLine(GetWorld(), GetActorLocation(), It->Key->GetActorLocation(), FColor::Blue, true, -1.0f, '\000', 6.0f);
 	}
 }
 

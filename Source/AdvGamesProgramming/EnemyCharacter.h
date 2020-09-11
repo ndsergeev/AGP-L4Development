@@ -49,7 +49,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	TArray<NavNode*> Path;
-    NavNode* CurrentNode;
+	NavNode* CurrentNode;
 	AAIManager* Manager;
 
 	FAISenseID StimulusType;

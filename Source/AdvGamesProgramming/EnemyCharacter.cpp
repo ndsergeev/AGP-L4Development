@@ -178,7 +178,7 @@ void AEnemyCharacter::AgentEngage()
 		{
 			//UE_LOG(LogTemp, Error, TEXT("AgentEngage - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-            auto NearestActorNode = Manager->FindNearestNode(ActorLocation);
+			auto NearestActorNode = Manager->FindNearestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, NearestActorNode);
 		}
 	}
@@ -195,7 +195,7 @@ void AEnemyCharacter::AgentEvade()
 		{
 			//UE_LOG(LogTemp, Error, TEXT("AgentEvade - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-            auto FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
+			auto FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, FurthestActorNode);
 		}
 	}
@@ -207,7 +207,7 @@ void AEnemyCharacter::AgentSearch()
 	{
 		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - New Path"));
 		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - NoisePosition: %s"), *LastNoisePosition.ToString());
-        auto NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
+		auto NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
 		Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
 		bHeardActor = false;
 	}
@@ -220,10 +220,10 @@ void AEnemyCharacter::MoveAlongPath()
 		//UE_LOG(LogTemp, Display, TEXT("Current Node: %s"), *CurrentNode->GetName());
 		if ((GetActorLocation() - CurrentNode->Location).IsNearlyZero(100.0f))
 		{
-            // THESE IS NO NAME IN NavNode auto UE_LOG(LogTemp, Display, TEXT("At Node %s"), *CurrentNode->GetName());
+			// THESE IS NO NAME IN NavNode auto UE_LOG(LogTemp, Display, TEXT("At Node %s"), *CurrentNode->GetName());
 			CurrentNode = Path.Pop();
-            // THESE IS NO NAME IN NavNode UE_LOG(LogTemp, Display, TEXT("Going to Node %s"), *CurrentNode->GetName());
-			DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->Location, FColor::Red, true, 1.0f, '\000', 8.0f);
+			// THESE IS NO NAME IN NavNode UE_LOG(LogTemp, Display, TEXT("Going to Node %s"), *CurrentNode->GetName());
+			//DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->Location, FColor::Red, true, 1.0f, '\000', 8.0f);
 		}
 		else
 		{

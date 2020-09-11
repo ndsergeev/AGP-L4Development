@@ -22,8 +22,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AI Properties")
 		int32 NumAI;
 
-//	UPROPERTY(VisibleAnywhere, Category = "Navigation Nodes")
-    TArray<NavNode*> AllNodes;
+	// UPROPERTY(VisibleAnywhere, Category = "Navigation Nodes")
+	TArray<NavNode*> AllNodes;
 
 	UPROPERTY(VisibleAnywhere, Category = "Agents")
 		TArray<AEnemyCharacter*> AllAgents;
@@ -38,7 +38,7 @@ public:
 	@param Location - The location that you want to find the nearest node from.
 	@return NearestNode - The nearest node to the given location.
 	*/
-    NavNode* FindNearestNode(const FVector& Location);
+	NavNode* FindNearestNode(const FVector& Location);
 	/**
 	Finds the furthest navigation node from the given location.
 	@param Location - The location that you want to find the furthest node from.
