@@ -117,6 +117,10 @@ void AEnemyCharacter::Tick(float DeltaTime)
 			}
 			break;
 		}
+		default: // Just in case!
+		{
+			UpdateState(AgentState::PATROL);
+		}
 	}
 
 	MoveAlongPath();
@@ -125,7 +129,6 @@ void AEnemyCharacter::Tick(float DeltaTime)
 void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void AEnemyCharacter::UpdateState(AgentState NewState)
@@ -159,6 +162,7 @@ void AEnemyCharacter::AgentPatrol()
 {
 	if (Path.Num() == 0 && Manager != NULL)
 	{
+		//UE_LOG(LogTemp, Error, TEXT("AgentPatrol - New Path"));
 		Path = Manager->GeneratePath(CurrentNode, Manager->AllNodes[FMath::RandRange(0, Manager->AllNodes.Num() - 1)]);
 	}
 }
@@ -172,8 +176,9 @@ void AEnemyCharacter::AgentEngage()
 
 		if (Path.Num() == 0)
 		{
+			//UE_LOG(LogTemp, Error, TEXT("AgentEngage - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-			ANavigationNode* NearestActorNode = Manager->FindNearestNode(ActorLocation);
+			auto NearestActorNode = Manager->FindNearestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, NearestActorNode);
 		}
 	}
@@ -188,8 +193,9 @@ void AEnemyCharacter::AgentEvade()
 
 		if (Path.Num() == 0)
 		{
+			//UE_LOG(LogTemp, Error, TEXT("AgentEvade - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-			ANavigationNode* FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
+			auto FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, FurthestActorNode);
 		}
 	}
@@ -197,16 +203,13 @@ void AEnemyCharacter::AgentEvade()
 
 void AEnemyCharacter::AgentSearch()
 {
-	if (bHeardActor && Path.Num() == 0)
+	if (Path.Num() == 0) // && bHeardActor
 	{
-		FVector NoisePosition = Manager->LastNoisePosition;
-		if (NoisePosition != FVector(999.0f, 999.0f, 999.0f))
-		{
-			UE_LOG(LogTemp, Error, TEXT("NoisePosition: %s"), *NoisePosition.ToString());
-			ANavigationNode* NearestNoiseNode = Manager->FindNearestNode(NoisePosition);
-			Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
-			Manager->LastNoisePosition = FVector(999.0f, 999.0f, 999.0f);
-		}
+		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - New Path"));
+		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - NoisePosition: %s"), *LastNoisePosition.ToString());
+		auto NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
+		Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
+		bHeardActor = false;
 	}
 }
 
@@ -215,16 +218,16 @@ void AEnemyCharacter::MoveAlongPath()
 	if (Path.Num() > 0 && Manager != NULL)
 	{
 		//UE_LOG(LogTemp, Display, TEXT("Current Node: %s"), *CurrentNode->GetName());
-		if ((GetActorLocation() - CurrentNode->GetActorLocation()).IsNearlyZero(100.0f))
+		if ((GetActorLocation() - CurrentNode->Location).IsNearlyZero(100.0f))
 		{
-			UE_LOG(LogTemp, Display, TEXT("At Node %s"), *CurrentNode->GetName());
+			// THESE IS NO NAME IN NavNode auto UE_LOG(LogTemp, Display, TEXT("At Node %s"), *CurrentNode->GetName());
 			CurrentNode = Path.Pop();
-			UE_LOG(LogTemp, Display, TEXT("Going to Node %s"), *CurrentNode->GetName());
-			DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->GetActorLocation(), FColor::Red, true, 1.0f, '\000', 8.0f);
+			// THESE IS NO NAME IN NavNode UE_LOG(LogTemp, Display, TEXT("Going to Node %s"), *CurrentNode->GetName());
+			//DrawDebugLine(GetWorld(), GetActorLocation(), CurrentNode->Location, FColor::Red, true, 1.0f, '\000', 8.0f);
 		}
 		else
 		{
-			FVector WorldDirection = CurrentNode->GetActorLocation() - GetActorLocation();
+			FVector WorldDirection = CurrentNode->Location - GetActorLocation();
 			WorldDirection.Normalize();
 			AddMovementInput(WorldDirection, 1.0f);
 

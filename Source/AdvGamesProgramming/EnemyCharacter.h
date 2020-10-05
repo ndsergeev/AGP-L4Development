@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NavigationNode.h"
+#include "NavNode.h"
 #include "GameFramework/Character.h"
 #include "AIManager.h"
 #include "Perception/AIPerceptionTypes.h"
@@ -18,6 +18,7 @@ enum class AgentState : uint8
 	EVADE,
 	SEARCH
 };
+
 
 UCLASS()
 class ADVGAMESPROGRAMMING_API AEnemyCharacter : public ACharacter
@@ -47,8 +48,8 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	TArray<ANavigationNode*> Path;
-	ANavigationNode* CurrentNode;
+	TArray<NavNode*> Path;
+	NavNode* CurrentNode;
 	AAIManager* Manager;
 
 	FAISenseID StimulusType;
@@ -68,6 +69,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void Fire(FVector FireDirection);
+
+	UPROPERTY(VisibleAnywhere)
+		FVector LastNoisePosition;
 
 private:
 	void MoveAlongPath();

@@ -25,7 +25,6 @@ void UNoiseNotify::OnAINotify(const FVector& NoisePosition, const float& Volume)
 {
 	if (AIManager != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AIManager: %s"), *AIManager->GetName());
-		AIManager->LastNoisePosition = NoisePosition;
+		AIManager->NotifyAgents(NoisePosition, Volume);
 	}
 }
