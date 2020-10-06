@@ -73,10 +73,11 @@ void AAIManager::GenerateNodes()
         for (auto& NodeB : AllNodes)
         {
             if (NodeA == NodeB) continue;
-
-            auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
-            NodeA->ConnectedNodes.Add(NodeB, Distance);
-            NodeB->ConnectedNodes.Add(NodeA, Distance);
+            {
+                auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
+                NodeA->ConnectedNodes.Add(NodeB, Distance);
+                NodeB->ConnectedNodes.Add(NodeA, Distance);
+            }
         }
     }
 }
@@ -85,15 +86,14 @@ void AAIManager::PopulateNodes()
 {
 	// Exist JUST to copy data from ANavigationNode to NavNode
 	TMap<ANavigationNode*, NavNode*> MatchMap;
-
 	// Copy Nodes of ANavigationNode to NavNode
 	for (TActorIterator<ANavigationNode> It(GetWorld()); It; ++It)
-	{
+    {
 		auto* Node = new NavNode;
 		Node->Location = It->GetActorLocation();
 
-		MatchMap.Add(*It, Node);
 
+		MatchMap.Add(*It, Node);
 		AllNodes.Add(Node);
 	}
 
@@ -101,9 +101,9 @@ void AAIManager::PopulateNodes()
 	for (auto& Match : MatchMap)
 	{
 		for (auto& Node : Match.Key->ConnectedNodes) // Match.Key is <ANavigationNode*>
-		{
+        {
 			if (MatchMap.Contains(Node.Key))
-			{
+            {
 				Match.Value->ConnectedNodes.Add(MatchMap[Node.Key], Node.Value);
 			}
 		}

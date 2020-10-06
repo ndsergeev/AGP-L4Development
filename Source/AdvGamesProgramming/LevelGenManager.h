@@ -13,14 +13,14 @@ class ADVGAMESPROGRAMMING_API ALevelGenManager : public AActor
 public:
 	ALevelGenManager();
 
-    UPROPERTY(EditAnywhere)
-        int Left;
-    UPROPERTY(EditAnywhere)
-        int Right;
-    UPROPERTY(EditAnywhere)
-        int Top;
-    UPROPERTY(EditAnywhere)
-        int Bottom;
+	UPROPERTY(EditAnywhere)
+		int Left;
+	UPROPERTY(EditAnywhere)
+		int Right;
+	UPROPERTY(EditAnywhere)
+		int Top;
+	UPROPERTY(EditAnywhere)
+		int Bottom;
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,5 +33,5 @@ public:
 	void GenerateLevel();
 
 private:
-    void TraverseRooms(ARoom* Room);
+	void TraverseRooms(ARoom* Room);
 };

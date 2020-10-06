@@ -27,18 +27,18 @@ public:
 		int Top;
 	UPROPERTY(VisibleAnywhere)
 		int Bottom;
-    UPROPERTY(VisibleAnywhere)
-        FVector CenterLocation;
+	UPROPERTY(VisibleAnywhere)
+		FVector CenterLocation;
 
-    const float FloorOffset = 200;
+	const float FloorOffset = 200;
 	const int MinWidth = 8;
-    const int MaxWidth = 30;
-    const int MinHeight = 8;
-    const int MaxHeight = 30;
+	const int MaxWidth = 30;
+	const int MinHeight = 8;
+	const int MaxHeight = 30;
 
-    const int TrimTiles = 1;
-    const int CorridorMargin = 2;
-    const int MinCorridorThickness = 2;
+	const int TrimTiles = 1;
+	const int CorridorMargin = 2;
+	const int MinCorridorThickness = 2;
 
 	bool IsHorizontalSplit = false;
 	bool IsVerticalSplit = false;
@@ -65,14 +65,13 @@ public:
 	void CreateRoom();
 	void Trim();
 
-	TArray<FVector> GetLeftConnections();
-	TArray<FVector> GetRightConnections();
-	TArray<FVector> GetTopConnections();
-	TArray<FVector> GetBottomConnections();
+	TArray<int> GetLeftConnections();
+	TArray<int> GetRightConnections();
+	TArray<int> GetTopConnections();
+	TArray<int> GetBottomConnections();
 
-	TArray<FVector> GetIntersectionGroups(TArray<FVector> Points);
+	TArray<int> GetIntersections(const TArray<int>& LeftConnections, const TArray<int>& RightConnections);
+	TArray<FVector> GetIntersectionGroups(TArray<int> Points);
 	void AddCorridors();
 
-	TArray<FVector> GetIntersections(const TArray<FVector>& LeftConnections,
-                                     const TArray<FVector>& RightConnections);
 };

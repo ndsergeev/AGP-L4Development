@@ -4,9 +4,9 @@
 
 ALevelGenManager::ALevelGenManager()
 {
-    /**
-     * Matt, please, do not forget to unTick actors
-     */
+	/**
+	 * Matt, please, do not forget to unTick actors
+	 */
 	PrimaryActorTick.bCanEverTick = false;
 }
 
@@ -29,30 +29,30 @@ void ALevelGenManager::GenerateLevel()
 	InitialRoom->AddCorridors();
 	InitialRoom->DrawRoom();
 
-    TraverseRooms(InitialRoom);
+	TraverseRooms(InitialRoom);
 
 #ifdef UE_EDITOR
-    UE_LOG(LogTemp, Warning, TEXT("Rooms Number: %i"), Rooms.Num());
-    for (const auto& Room : Rooms)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("<%s>\tW:%i,\t\tH:%i"),
-               *Room->GetName(),
-               Room->GetWidth(),
-               Room->GetHeight());
-    }
+	UE_LOG(LogTemp, Warning, TEXT("Rooms Number: %i"), Rooms.Num());
+	for (const auto& Room : Rooms)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("<%s>\tW:%i,\t\tH:%i"),
+			*Room->GetName(),
+			Room->GetWidth(),
+			Room->GetHeight());
+	}
 #endif
 }
 
 void ALevelGenManager::TraverseRooms(ARoom* Room)
 {
-    if (!Room) return;
+	if (!Room) return;
 
-    TraverseRooms(Room->LeftRoom);
+	TraverseRooms(Room->LeftRoom);
 
-    TraverseRooms(Room->RightRoom);
+	TraverseRooms(Room->RightRoom);
 
-    if (Room->IsLeaf())
-    {
-        Rooms.Add(Room);
-    }
+	if (Room->IsLeaf())
+	{
+		Rooms.Add(Room);
+	}
 }
