@@ -8,9 +8,9 @@
 
 ARoom::ARoom()
 {
-    /**
-     * Matt, please, do not forget to unTick actors
-     */
+	/**
+	 * Matt, please, do not forget to unTick actors
+	 */
 	PrimaryActorTick.bCanEverTick = false;
 
 	IsHorizontalSplit = false;
@@ -157,33 +157,34 @@ void ARoom::DrawRoom()
 
 void ARoom::CreateRoom()
 {
-    if (!FloorToSpawn) return;
+	if (!FloorToSpawn) return;
 
-    UWorld* World = GetWorld();
-    if (!World) return;
+	UWorld* World = GetWorld();
+	if (!World) return;
 
-    FRotator Rotator(0, 0, 0);
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Owner = this;
+	FRotator Rotator(0, 0, 0);
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
 
-    CenterLocation = {float(Left + Right + 1) / 2 * FloorOffset,
-                      float(Bottom + Top + 1) * FloorOffset,
-                      0};
+	CenterLocation = { float(Left + Right + 1) / 2 * FloorOffset, float(Bottom + Top + 1) * FloorOffset, 0 };
 
-    /**
-     * ToDo:
-     * ReStretch Tiles here
-     * We do not need this expensive function to produce a lot
-     * of Tiles 76 Polygons each. It is not UE5!
-     */
-    for (int x = Left; x <= Right; ++x)
-    {
-        for (int y = Bottom; y <= Top; ++y)
-        {
-            FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
-            auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
-        }
-    }
+	/**
+	 * ToDo:
+	 * - Scale a single tile here
+	 *   - We do not need this expensive function to produce a lot
+	 *     of Tiles 76 Polygons each. It is not UE5!
+	 *
+	 * Matt- We probably want to create a c++ function to call,
+	 *       and then access those variables from a BP to resize.
+	 */
+	for (int x = Left; x <= Right; ++x)
+	{
+		for (int y = Bottom; y <= Top; ++y)
+		{
+			FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
+			auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
+		}
+	}
 }
 
 void ARoom::Trim()
@@ -204,9 +205,9 @@ void ARoom::Trim()
 	}
 }
 
-TArray<FVector> ARoom::GetLeftConnections()
+TArray<int> ARoom::GetLeftConnections()
 {
-	TArray<FVector> Connections;
+	TArray<int> Connections;
 
 	if (!IsLeaf())
 	{
@@ -223,15 +224,15 @@ TArray<FVector> ARoom::GetLeftConnections()
 	{
 		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; ++y)
 		{
-			Connections.Push(FVector(0, y, 0));
+			Connections.Push(y);
 		}
 	}
 	return Connections;
 }
 
-TArray<FVector> ARoom::GetRightConnections()
+TArray<int> ARoom::GetRightConnections()
 {
-	TArray<FVector> Connections;
+	TArray<int> Connections;
 
 	if (!IsLeaf())
 	{
@@ -248,15 +249,15 @@ TArray<FVector> ARoom::GetRightConnections()
 	{
 		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; ++y)
 		{
-			Connections.Push(FVector(0, y, 0));
+			Connections.Push(y);
 		}
 	}
 	return Connections;
 }
 
-TArray<FVector> ARoom::GetTopConnections()
+TArray<int> ARoom::GetTopConnections()
 {
-	TArray<FVector> Connections;
+	TArray<int> Connections;
 
 	if (!IsLeaf())
 	{
@@ -273,15 +274,15 @@ TArray<FVector> ARoom::GetTopConnections()
 	{
 		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; ++x)
 		{
-			Connections.Push(FVector(x, 0, 0));
+			Connections.Push(x);
 		}
 	}
 	return Connections;
 }
 
-TArray<FVector> ARoom::GetBottomConnections()
+TArray<int> ARoom::GetBottomConnections()
 {
-	TArray<FVector> Connections;
+	TArray<int> Connections;
 
 	if (!IsLeaf())
 	{
@@ -298,13 +299,27 @@ TArray<FVector> ARoom::GetBottomConnections()
 	{
 		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; ++x)
 		{
-			Connections.Push(FVector(x, 0, 0));
+			Connections.Push(x);
 		}
 	}
 	return Connections;
 }
 
-TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
+TArray<int> ARoom::GetIntersections(const TArray<int>& LeftConnections, const TArray<int>& RightConnections)
+{
+	TArray<int> Intersections;
+	for (const auto& LeftVector : LeftConnections)
+	{
+		if (RightConnections.Contains(LeftVector))
+		{
+			Intersections.Push(LeftVector);
+		}
+	}
+
+	return Intersections;
+}
+
+TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 {
 	TArray<FVector> Groups;
 
@@ -312,20 +327,17 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
 	FVector CurrentGroup = FVector::ZeroVector;
 	for (int i = 0; i < Points.Num(); ++i)
 	{
-		FVector Num = Points[i];
+		int Num = Points[i];
 
 		if (FirstTime || Points[i - 1] != Points[i] - 1)
 		{
-			if (!FirstTime)
+			if (!FirstTime && CurrentGroup.Y - CurrentGroup.X >= MinCorridorThickness)
 			{
-				if (CurrentGroup.Y - CurrentGroup.X >= MinCorridorThickness)
-				{
-					Groups.Add(CurrentGroup);
-				}
+				Groups.Add(CurrentGroup);
 			}
 
 			FirstTime = false;
-			CurrentGroup = Num;
+			CurrentGroup = FVector(Num, Num, 0);
 		}
 		else
 		{
@@ -333,12 +345,9 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
 		}
 	}
 
-	if (!FirstTime)
+	if (!FirstTime && CurrentGroup.Y - CurrentGroup.X >= MinCorridorThickness)
 	{
-		if (CurrentGroup.Y - CurrentGroup.X >= MinCorridorThickness)
-		{
-			Groups.Add(CurrentGroup);
-		}
+		Groups.Add(CurrentGroup);
 	}
 
 	return Groups;
@@ -346,12 +355,16 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
 
 void ARoom::AddCorridors()
 {
-	if (IsLeaf()) return;
+	if (IsLeaf())
+	{
+		return;
+	}
 
 	if (LeftRoom != nullptr)
 	{
 		LeftRoom->AddCorridors();
 	}
+
 	if (RightRoom != nullptr)
 	{
 		RightRoom->AddCorridors();
@@ -361,24 +374,25 @@ void ARoom::AddCorridors()
 	{
 		if (IsVerticalSplit)
 		{
-			TArray<FVector> LeftRoomRightConnections = LeftRoom->GetRightConnections();
-			TArray<FVector> RightRoomLeftConnections = RightRoom->GetLeftConnections();
-			TArray<FVector> Positions = GetIntersections(LeftRoomRightConnections, RightRoomLeftConnections);
+			TArray<int> LeftRoomRightConnections = LeftRoom->GetRightConnections();
+			TArray<int> RightRoomLeftConnections = RightRoom->GetLeftConnections();
+			TArray<int> Positions = GetIntersections(LeftRoomRightConnections, RightRoomLeftConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
+
 			if (Groups.Num() > 0)
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(LeftRoom->Right, LeftRoom->Right + 2, p.Y, p.X);
+				Corridor->SetSize(LeftRoom->Right - 1, LeftRoom->Right + 2, p.Y, p.X);
 				Corridor->DrawRoom();
 			}
 		}
 		else
 		{
-			TArray<FVector> LeftRoomBottomConnections = LeftRoom->GetBottomConnections();
-			TArray<FVector> RightRoomTopConnections = RightRoom->GetTopConnections();
-			TArray<FVector> Positions = GetIntersections(LeftRoomBottomConnections, RightRoomTopConnections);
+			TArray<int> LeftRoomBottomConnections = LeftRoom->GetBottomConnections();
+			TArray<int> RightRoomTopConnections = RightRoom->GetTopConnections();
+			TArray<int> Positions = GetIntersections(LeftRoomBottomConnections, RightRoomTopConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
 
 			if (Groups.Num() > 0)
@@ -386,23 +400,9 @@ void ARoom::AddCorridors()
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(p.X, p.Y, LeftRoom->Bottom, LeftRoom->Bottom - 2);
+				Corridor->SetSize(p.X, p.Y, LeftRoom->Bottom + 1, LeftRoom->Bottom - 2);
 				Corridor->DrawRoom();
 			}
 		}
 	}
-}
-
-TArray<FVector> ARoom::GetIntersections(const TArray<FVector>& LeftConnections, const TArray<FVector>& RightConnections)
-{
-	TArray<FVector> Intersections;
-	for (const auto& Vector : LeftConnections)
-	{
-		if (RightConnections.Contains(Vector))
-		{
-			Intersections.Push(Vector);
-		}
-	}
-
-	return Intersections;
 }
