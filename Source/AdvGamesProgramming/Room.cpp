@@ -1,18 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "Room.h"
 #include "Floor.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "UObject/ConstructorHelpers.h"
-#include "Runtime\Engine\Classes\Kismet\GameplayStatics.h"
+#include "Kismet/GameplayStatics.h"
 #include "Math/Range.h"
 
-// Sets default values
 ARoom::ARoom()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    /**
+     * Matt, please, do not forget to unTick actors
+     */
+	PrimaryActorTick.bCanEverTick = false;
 
 	IsHorizontalSplit = false;
 	IsVerticalSplit = false;
@@ -27,13 +26,11 @@ ARoom::ARoom()
 	}
 }
 
-// Called when the game starts or when spawned
 void ARoom::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
 void ARoom::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -41,7 +38,9 @@ void ARoom::Tick(float DeltaTime)
 
 void ARoom::SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom)
 {
+#ifdef UE_EDITOR
 	UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
+#endif
 
 	this->Left = NewLeft;
 	this->Right = NewRight;
@@ -51,13 +50,11 @@ void ARoom::SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom)
 
 int ARoom::GetWidth()
 {
-	Width = Right - Left + 1;
 	return Right - Left + 1;
 }
 
 int ARoom::GetHeight()
 {
-	Height = Top - Bottom + 1;
 	return Top - Bottom + 1;
 }
 
@@ -132,9 +129,9 @@ void ARoom::VerticalSplit()
 	}
 }
 
-bool ARoom::IsLeaf()
+bool ARoom::IsLeaf() const
 {
-	return (IsHorizontalSplit == false) && (IsVerticalSplit == false);
+	return !IsHorizontalSplit && !IsVerticalSplit;
 }
 
 void ARoom::DrawRoom()
@@ -160,27 +157,33 @@ void ARoom::DrawRoom()
 
 void ARoom::CreateRoom()
 {
-	if (FloorToSpawn)
-	{
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			int FloorOffset = 200;
+    if (!FloorToSpawn) return;
 
-			FRotator Rotator(0, 0, 0);
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
+    UWorld* World = GetWorld();
+    if (!World) return;
 
-			for (int x = Left; x <= Right; x++)
-			{
-				for (int y = Bottom; y <= Top; y++)
-				{
-					FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
-					AFloor* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
-				}
-			}
-		}
-	}
+    FRotator Rotator(0, 0, 0);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = this;
+
+    CenterLocation = {float(Left + Right + 1) / 2 * FloorOffset,
+                      float(Bottom + Top + 1) * FloorOffset,
+                      0};
+
+    /**
+     * ToDo:
+     * ReStretch Tiles here
+     * We do not need this expensive function to produce a lot
+     * of Tiles 76 Polygons each. It is not UE5!
+     */
+    for (int x = Left; x <= Right; ++x)
+    {
+        for (int y = Bottom; y <= Top; ++y)
+        {
+            FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
+            auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
+        }
+    }
 }
 
 void ARoom::Trim()
@@ -218,7 +221,7 @@ TArray<FVector> ARoom::GetLeftConnections()
 	}
 	else
 	{
-		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; y++)
+		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; ++y)
 		{
 			Connections.Push(FVector(0, y, 0));
 		}
@@ -243,7 +246,7 @@ TArray<FVector> ARoom::GetRightConnections()
 	}
 	else
 	{
-		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; y++)
+		for (int y = Bottom + CorridorMargin; y <= Top - CorridorMargin; ++y)
 		{
 			Connections.Push(FVector(0, y, 0));
 		}
@@ -268,7 +271,7 @@ TArray<FVector> ARoom::GetTopConnections()
 	}
 	else
 	{
-		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; x++)
+		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; ++x)
 		{
 			Connections.Push(FVector(x, 0, 0));
 		}
@@ -293,7 +296,7 @@ TArray<FVector> ARoom::GetBottomConnections()
 	}
 	else
 	{
-		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; x++)
+		for (int x = Left + CorridorMargin; x <= Right - CorridorMargin; ++x)
 		{
 			Connections.Push(FVector(x, 0, 0));
 		}
@@ -307,7 +310,7 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
 
 	bool FirstTime = true;
 	FVector CurrentGroup = FVector::ZeroVector;
-	for (int i = 0; i < Points.Num(); i++)
+	for (int i = 0; i < Points.Num(); ++i)
 	{
 		FVector Num = Points[i];
 
@@ -343,10 +346,7 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<FVector> Points)
 
 void ARoom::AddCorridors()
 {
-	if (IsLeaf())
-	{
-		return;
-	}
+	if (IsLeaf()) return;
 
 	if (LeftRoom != nullptr)
 	{
@@ -369,7 +369,7 @@ void ARoom::AddCorridors()
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
-				ARoom* Corridor = GetWorld()->SpawnActor<ARoom>();
+				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
 				Corridor->SetSize(LeftRoom->Right, LeftRoom->Right + 2, p.Y, p.X);
 				Corridor->DrawRoom();
 			}
@@ -380,11 +380,12 @@ void ARoom::AddCorridors()
 			TArray<FVector> RightRoomTopConnections = RightRoom->GetTopConnections();
 			TArray<FVector> Positions = GetIntersections(LeftRoomBottomConnections, RightRoomTopConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
+
 			if (Groups.Num() > 0)
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
-				ARoom* Corridor = GetWorld()->SpawnActor<ARoom>();
+				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
 				Corridor->SetSize(p.X, p.Y, LeftRoom->Bottom, LeftRoom->Bottom - 2);
 				Corridor->DrawRoom();
 			}
@@ -392,15 +393,16 @@ void ARoom::AddCorridors()
 	}
 }
 
-TArray<FVector> ARoom::GetIntersections(TArray<FVector> LeftConnections, TArray<FVector> RightConnections)
+TArray<FVector> ARoom::GetIntersections(const TArray<FVector>& LeftConnections, const TArray<FVector>& RightConnections)
 {
 	TArray<FVector> Intersections;
-	for (FVector Vector : LeftConnections)
+	for (const auto& Vector : LeftConnections)
 	{
 		if (RightConnections.Contains(Vector))
 		{
 			Intersections.Push(Vector);
 		}
 	}
+
 	return Intersections;
 }
