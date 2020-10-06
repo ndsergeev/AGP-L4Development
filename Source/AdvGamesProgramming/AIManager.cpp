@@ -4,7 +4,7 @@
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "DrawDebugHelpers.h"
-
+#include "LevelGenManager.h"
 #include "NavigationNode.h"
 
 AAIManager::AAIManager()
@@ -16,79 +16,69 @@ void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PopulateNodes();
+	/** ToDo:
+	 * 1. Decompose this class to AIManager and AINodeGenerator
+	 * 2. Make better map checker
+	 */
+	auto CurrentMapName = GetWorld()->GetMapName();
+
+    if (CurrentMapName == "UEDPIE_0_ProcGenMap")
+	{
+        GenerateNodes();
+	}
+	else
+    {
+	    PopulateNodes();
+    }
+
+#ifdef UE_EDITOR
+    // Comment if Debug is not required
+    for (auto& Node : AllNodes)
+    {
+        //UE_LOG(LogTemp, Error, TEXT("Parent: %s"), *Node->Location.ToString());
+        for (auto& ConnectedNode : Node->ConnectedNodes)
+        {
+            //UE_LOG(LogTemp, Error, TEXT("Distance:  %f; From <%s> To <%s>"), ConnectedNode.Value, *Node->Location.ToString(), *ConnectedNode.Key->Location.ToString());
+            //UE_LOG(LogTemp, Error, TEXT("Child:  %s"), *ConnectedNode.Key->Location.ToString());
+            DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Red, true, -1.0f, '\000', 6.0f);
+        }
+    }
+#endif
+
 	CreateAgents();
 }
 
-TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
+void AAIManager::GenerateNodes()
 {
-	if (StartNode == EndNode)
-	{
-		return TArray<NavNode*>();
-	}
+    UE_LOG(LogTemp, Error, TEXT("GenerateNodes"));
+    TArray<ARoom*>* Rooms = nullptr;
 
-	TArray<NavNode*> OpenSet;
-	for (auto& Node : AllNodes)
-	{
-		Node->GScore = TNumericLimits<float>::Max();
-	}
+    // Extract the single instance of ALevelGenManager to take
+    // Room positions from it.
+    for (TActorIterator<ALevelGenManager> It(GetWorld()); It; ++It)
+    {
+        Rooms = &It->Rooms;
+        break;
+    }
 
-	StartNode->GScore = 0;
-	StartNode->HScore = FVector::Distance(StartNode->Location, EndNode->Location);
+    for (const auto& Room : *Rooms)
+    {
+        auto* Node = new NavNode;
+        Node->Location = Room->CenterLocation + FVector(0, 0, 100);
+        AllNodes.Add(Node);
+    }
 
-	OpenSet.Add(StartNode);
+    for (auto& NodeA : AllNodes)
+    {
+        for (auto& NodeB : AllNodes)
+        {
+            if (NodeA == NodeB) continue;
 
-	while (OpenSet.Num() > 0)
-	{
-		int32 IndexLowestFScore = 0;
-		for (int32 i = 1; i < OpenSet.Num(); ++i)
-		{
-			if (OpenSet[i]->FScore() < OpenSet[IndexLowestFScore]->FScore())
-			{
-				IndexLowestFScore = i;
-			}
-		}
-
-		NavNode* CurrentNode = OpenSet[IndexLowestFScore];
-
-		OpenSet.Remove(CurrentNode);
-
-		if (CurrentNode == EndNode)
-		{
-			TArray<NavNode*> Path;
-			Path.Push(EndNode);
-			CurrentNode = EndNode;
-			while (CurrentNode != StartNode)
-			{
-				CurrentNode = CurrentNode->CameFrom;
-				if (CurrentNode->CameFrom == nullptr)
-				{
-					UE_LOG(LogTemp, Error, TEXT("CameFrom IS NULLPTR"));
-				}
-				Path.Add(CurrentNode);
-			}
-			return Path;
-		}
-
-		for (auto& ConnectedNode : CurrentNode->ConnectedNodes)
-		{
-			//float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
-			float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
-			if (TentativeGScore < ConnectedNode.Key->GScore)
-			{
-				ConnectedNode.Key->CameFrom = CurrentNode;
-				ConnectedNode.Key->GScore = TentativeGScore;
-				ConnectedNode.Key->HScore = FVector::Distance(ConnectedNode.Key->Location, EndNode->Location);
-				if (!OpenSet.Contains(ConnectedNode.Key))
-				{
-					OpenSet.Add(ConnectedNode.Key);
-				}
-			}
-		}
-	}
-
-	//UE_LOG(LogTemp, Error, TEXT("NO PATH FOUND"));
-	return TArray<NavNode*>();
+            auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
+            NodeA->ConnectedNodes.Add(NodeB, Distance);
+            NodeB->ConnectedNodes.Add(NodeA, Distance);
+        }
+    }
 }
 
 void AAIManager::PopulateNodes()
@@ -120,30 +110,18 @@ void AAIManager::PopulateNodes()
 	}
 
 	MatchMap.Empty();
-
-#ifdef UE_EDITOR
-	// Comment if Debug is not required
-	for (auto& Node : AllNodes)
-	{
-		//UE_LOG(LogTemp, Error, TEXT("Parent: %s"), *Node->Location.ToString());
-		for (auto& ConnectedNode : Node->ConnectedNodes)
-		{
-			//UE_LOG(LogTemp, Error, TEXT("Distance:  %f; From <%s> To <%s>"), ConnectedNode.Value, *Node->Location.ToString(), *ConnectedNode.Key->Location.ToString());
-			//UE_LOG(LogTemp, Error, TEXT("Child:  %s"), *ConnectedNode.Key->Location.ToString());
-			DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Blue, true, -1.0f, '\000', 6.0f);
-		}
-	}
-#endif
 }
 
 void AAIManager::CreateAgents()
 {
-	if (AllNodes.Num() < 1) { return; } // Null error otherwise
+	if (!AgentToSpawn || AllNodes.Num() < 1) return;
 
 	for (int32 i = 0; i < NumAI; ++i)
 	{
 		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
-		auto Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->Location, FRotator::ZeroRotator);
+		auto Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
+                                                       AllNodes[RandIndex]->Location,
+                                                       FRotator::ZeroRotator);
 		Agent->Manager = this;
 		Agent->CurrentNode = AllNodes[RandIndex];
 		AllAgents.Add(Agent);
@@ -163,6 +141,77 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
 		}
 	}
+}
+
+TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
+{
+    if (StartNode == EndNode)
+    {
+        return TArray<NavNode*>();
+    }
+
+    TArray<NavNode*> OpenSet;
+    for (auto& Node : AllNodes)
+    {
+        Node->GScore = TNumericLimits<float>::Max();
+    }
+
+    StartNode->GScore = 0;
+    StartNode->HScore = FVector::Distance(StartNode->Location, EndNode->Location);
+
+    OpenSet.Add(StartNode);
+
+    while (OpenSet.Num() > 0)
+    {
+        int32 IndexLowestFScore = 0;
+        for (int32 i = 1; i < OpenSet.Num(); ++i)
+        {
+            if (OpenSet[i]->FScore() < OpenSet[IndexLowestFScore]->FScore())
+            {
+                IndexLowestFScore = i;
+            }
+        }
+
+        NavNode* CurrentNode = OpenSet[IndexLowestFScore];
+
+        OpenSet.Remove(CurrentNode);
+
+        if (CurrentNode == EndNode)
+        {
+            TArray<NavNode*> Path;
+            Path.Push(EndNode);
+            CurrentNode = EndNode;
+            while (CurrentNode != StartNode)
+            {
+                CurrentNode = CurrentNode->CameFrom;
+                if (CurrentNode->CameFrom == nullptr)
+                {
+                    UE_LOG(LogTemp, Error, TEXT("CameFrom IS NULLPTR"));
+                }
+                Path.Add(CurrentNode);
+            }
+            return Path;
+        }
+
+        for (auto& ConnectedNode : CurrentNode->ConnectedNodes)
+        {
+            //float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
+            float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
+            if (TentativeGScore < ConnectedNode.Key->GScore)
+            {
+                ConnectedNode.Key->CameFrom = CurrentNode;
+                ConnectedNode.Key->GScore = TentativeGScore;
+                ConnectedNode.Key->HScore = FVector::Distance(ConnectedNode.Key->Location, EndNode->Location);
+                if (!OpenSet.Contains(ConnectedNode.Key))
+                {
+                    OpenSet.Add(ConnectedNode.Key);
+                }
+            }
+        }
+    }
+
+    //UE_LOG(LogTemp, Error, TEXT("NO PATH FOUND"));
+    return TArray<NavNode*>();
 }
 
 NavNode* AAIManager::FindNearestNode(const FVector& Location)

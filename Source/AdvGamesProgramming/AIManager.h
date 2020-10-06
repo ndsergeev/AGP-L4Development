@@ -46,6 +46,7 @@ public:
 	*/
 	NavNode* FindFurthestNode(const FVector& Location);
 
+	void GenerateNodes();
 	void PopulateNodes();
 	void CreateAgents();
 
