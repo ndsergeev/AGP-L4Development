@@ -28,7 +28,7 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 	}
 
 	TArray<NavNode*> OpenSet;
-	for (NavNode* Node : AllNodes)
+	for (auto& Node : AllNodes)
 	{
 		Node->GScore = TNumericLimits<float>::Max();
 	}
@@ -63,7 +63,7 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 				CurrentNode = CurrentNode->CameFrom;
 				if (CurrentNode->CameFrom == nullptr)
 				{
-					UE_LOG(LogTemp, Error, TEXT("NULLPTR CAME FROM"));
+					UE_LOG(LogTemp, Error, TEXT("CameFrom IS NULLPTR"));
 				}
 				Path.Add(CurrentNode);
 			}
@@ -121,6 +121,7 @@ void AAIManager::PopulateNodes()
 
 	MatchMap.Empty();
 
+#ifdef UE_EDITOR
 	// Comment if Debug is not required
 	for (auto& Node : AllNodes)
 	{
@@ -132,6 +133,7 @@ void AAIManager::PopulateNodes()
 			DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Blue, true, -1.0f, '\000', 6.0f);
 		}
 	}
+#endif
 }
 
 void AAIManager::CreateAgents()
@@ -167,7 +169,7 @@ NavNode* AAIManager::FindNearestNode(const FVector& Location)
 {
 	NavNode* NearestNode = nullptr;
 	float NearestDistance = TNumericLimits<float>::Max();
-	for (NavNode* CurrentNode : AllNodes)
+	for (auto& CurrentNode : AllNodes)
 	{
 		// there is no point in making SQRT in Distance, refer to Magnitude calculation
 		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
@@ -187,7 +189,7 @@ NavNode* AAIManager::FindFurthestNode(const FVector& Location)
 {
 	NavNode* FurthestNode = nullptr;
 	float FurthestDistance = 0.0f;
-	for (NavNode* CurrentNode : AllNodes)
+	for (auto& CurrentNode : AllNodes)
 	{
 		// there is no point in making SQRT in Distance, refer to Magnitude calculation
 		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
