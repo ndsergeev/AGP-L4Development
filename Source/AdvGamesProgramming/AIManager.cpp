@@ -40,46 +40,122 @@ void AAIManager::BeginPlay()
         {
             //UE_LOG(LogTemp, Error, TEXT("Distance:  %f; From <%s> To <%s>"), ConnectedNode.Value, *Node->Location.ToString(), *ConnectedNode.Key->Location.ToString());
             //UE_LOG(LogTemp, Error, TEXT("Child:  %s"), *ConnectedNode.Key->Location.ToString());
-            DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Red, true, -1.0f, '\000', 6.0f);
+            DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Black, true, -1.0f, '\000', 10.0f);
         }
     }
 #endif
 
-	CreateAgents();
+//	CreateAgents();
 }
 
 void AAIManager::GenerateNodes()
 {
     UE_LOG(LogTemp, Error, TEXT("GenerateNodes"));
     TArray<ARoom*>* Rooms = nullptr;
+    TArray<ARoom*>* Corridors = nullptr;
 
     // Extract the single instance of ALevelGenManager to take
     // Room positions from it.
     for (TActorIterator<ALevelGenManager> It(GetWorld()); It; ++It)
     {
+        /**
+         * Vital function to make sure ALevelGenManager Finish
+         * its BeginPlay() function
+         */
+        if (!It->HasActorBegunPlay())
+        {
+            It->DispatchBeginPlay();
+        }
+
         Rooms = &It->Rooms;
+        Corridors = &It->Corridors;
         break;
     }
 
+#ifdef UE_EDITOR
+    UE_LOG(LogTemp, Warning, TEXT("Found Rooms and Corrs Number: %i and %i"), Rooms->Num(), Corridors->Num());
+#endif
+
+    auto VerticalOffset = FVector(0, 0, 100);
+
+    TMap<ARoom*, TArray<NavNode*>> RoomNodes;
     for (const auto& Room : *Rooms)
     {
         auto* Node = new NavNode;
-        Node->Location = Room->CenterLocation + FVector(0, 0, 100);
+        Node->Location = Room->CenterLocation + VerticalOffset;
+        auto NodeArr = TArray<NavNode*>( { Node } );
+
+        RoomNodes.Add(Room, NodeArr);
         AllNodes.Add(Node);
     }
 
-    for (auto& NodeA : AllNodes)
+    for (const auto& Corridor : *Corridors)
     {
-        for (auto& NodeB : AllNodes)
+        auto NodeArr = TArray<NavNode*>();
+        for (const auto& AdjCorridor : Corridor->DoorwayLocations)
         {
-            if (NodeA == NodeB) continue;
+            auto* Node = new NavNode;
+            Node->Location = AdjCorridor.Value + VerticalOffset;
+
+            if (RoomNodes.Contains(AdjCorridor.Key))
             {
+                RoomNodes[AdjCorridor.Key].Add(Node);
+            }
+
+            NodeArr.Add(Node);
+            AllNodes.Add(Node);
+        }
+
+        if (NodeArr.Num() != 2)
+        {
+            UE_LOG(LogTemp, Error, TEXT("LOOK!!!\t\tNodeArr.Num() != 2"));
+        }
+        else
+        {
+            auto Distance = FVector::Distance(NodeArr[0]->Location, NodeArr[1]->Location);
+            NodeArr[0]->ConnectedNodes.Add(NodeArr[1], Distance);
+            NodeArr[1]->ConnectedNodes.Add(NodeArr[0], Distance);
+        }
+    }
+
+    for (const auto& RoomNode : RoomNodes)
+    {
+        for (const auto& NodeA : RoomNode.Value)
+        {
+            for (const auto& NodeB : RoomNode.Value)
+            {
+                if (NodeA == NodeB) continue;
+
                 auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
                 NodeA->ConnectedNodes.Add(NodeB, Distance);
                 NodeB->ConnectedNodes.Add(NodeA, Distance);
             }
         }
     }
+
+    RoomNodes.Empty();
+
+#ifdef UE_EDITOR
+    UE_LOG(LogTemp, Warning, TEXT("Nodes Number: %i"), AllNodes.Num());
+#endif
+//    for (const auto& Room : *Rooms)
+//    {
+//        auto* RoomCentreNode = new NavNode;
+//        RoomCentreNode->Location = Room->CenterLocation + VerticalOffset;
+//    }
+//
+//    for (auto& NodeA : AllNodes)
+//    {
+//        for (auto& NodeB : AllNodes)
+//        {
+//            if (NodeA == NodeB) continue;
+//            {
+//                auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
+//                NodeA->ConnectedNodes.Add(NodeB, Distance);
+//                NodeB->ConnectedNodes.Add(NodeA, Distance);
+//            }
+//        }
+//    }
 }
 
 void AAIManager::PopulateNodes()
@@ -145,6 +221,8 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 
 TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 {
+    if (!(StartNode && EndNode)) return TArray<NavNode*>();
+
     if (StartNode == EndNode)
     {
         return TArray<NavNode*>();

@@ -166,7 +166,8 @@ void ARoom::CreateRoom()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
-	CenterLocation = { float(Left + Right) * FloorOffset / 2, float(Bottom + Top) * FloorOffset / 2, 0 };
+	auto HalfFloorOffset = FloorOffset / 2;
+	CenterLocation = { (Left + Right) * HalfFloorOffset, (Bottom + Top) * HalfFloorOffset, 0 };
 
 	/**
 	 * ToDo:
@@ -380,9 +381,21 @@ void ARoom::AddCorridors()
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
+                int NewLeft = LeftRoom->Right - 1;
+                int NewRight = LeftRoom->Right + 2;
+                int NewTop = p.Y;
+                int NewBottom = p.X;
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(LeftRoom->Right - 1, LeftRoom->Right + 2, p.Y, p.X);
+				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
+
+                Corridor->bIsCorridor = true;
+                Corridor->DoorwayLocations.Add(LeftRoom, FVector(NewRight,
+                                                                 float(NewTop + NewBottom) / 2,
+                                                                 0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(RightRoom, FVector(NewLeft,
+                                                                  float(NewTop + NewBottom) / 2,
+                                                                  0) * FloorOffset);
 			}
 		}
 		else
@@ -396,9 +409,21 @@ void ARoom::AddCorridors()
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
+                int NewLeft = p.X;
+                int NewRight = p.Y;
+                int NewTop = LeftRoom->Bottom + 1;
+                int NewBottom = LeftRoom->Bottom - 2;
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(p.X, p.Y, LeftRoom->Bottom + 1, LeftRoom->Bottom - 2);
+				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
+
+                Corridor->bIsCorridor = true;
+                Corridor->DoorwayLocations.Add(LeftRoom, FVector(float(NewLeft + NewRight) / 2,
+                                                                 NewTop,
+                                                                 0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(RightRoom, FVector(float(NewLeft + NewRight) / 2,
+                                                                  NewBottom,
+                                                                  0) * FloorOffset);
 			}
 		}
 	}

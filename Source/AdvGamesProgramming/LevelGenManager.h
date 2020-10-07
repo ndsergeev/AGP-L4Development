@@ -29,9 +29,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	TArray<ARoom*> Rooms;
+	TArray<ARoom*> Corridors;
 
 	void GenerateLevel();
 
 private:
 	void TraverseRooms(ARoom* Room);
+	void LoopCorridors();
 };

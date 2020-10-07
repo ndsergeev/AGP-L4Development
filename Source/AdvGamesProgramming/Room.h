@@ -30,6 +30,17 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		FVector CenterLocation;
 
+	/**
+	 * Sorry, for this ugly solution, but because Corridors
+	 * aren't inherited from the ARoom base class I have to
+	 * use it, I know that my solution makes it even uglier.
+	 * Here is the map for each corridor with the
+	 * rooms it intersects and the coordinates.
+	 */
+	bool bIsCorridor = false;
+    UPROPERTY(VisibleAnywhere)
+        TMap<ARoom*, FVector> DoorwayLocations;
+
 	const float FloorOffset = 200;
 	const int MinWidth = 8;
 	const int MaxWidth = 30;
