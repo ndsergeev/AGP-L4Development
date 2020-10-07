@@ -166,7 +166,7 @@ void ARoom::CreateRoom()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
-	CenterLocation = { float(Left + Right + 1) / 2 * FloorOffset, float(Bottom + Top + 1) * FloorOffset, 0 };
+	CenterLocation = { float(Left + Right) * FloorOffset / 2, float(Bottom + Top) * FloorOffset / 2, 0 };
 
 	/**
 	 * ToDo:
@@ -355,10 +355,7 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 
 void ARoom::AddCorridors()
 {
-	if (IsLeaf())
-	{
-		return;
-	}
+	if (IsLeaf()) return;
 
 	if (LeftRoom != nullptr)
 	{
