@@ -39,7 +39,7 @@ void ARoom::Tick(float DeltaTime)
 void ARoom::SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom)
 {
 #ifdef UE_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
+//	UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
 #endif
 
 	this->Left = NewLeft;
@@ -106,6 +106,9 @@ void ARoom::HorizontalSplit()
 		RightRoom->SetSize(Left, Right, SplitCoord - 1, Bottom);
 		RightRoom->Split();
 	}
+
+    LeftRoom->Neighbour = RightRoom;
+    RightRoom->Neighbour = LeftRoom;
 }
 
 void ARoom::VerticalSplit()
@@ -127,6 +130,9 @@ void ARoom::VerticalSplit()
 		RightRoom->SetSize(SplitCoord, Right, Top, Bottom);
 		RightRoom->Split();
 	}
+
+    LeftRoom->Neighbour = RightRoom;
+    RightRoom->Neighbour = LeftRoom;
 }
 
 bool ARoom::IsLeaf() const
@@ -354,6 +360,48 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 	return Groups;
 }
 
+//TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
+//{
+//    TArray<FVector> Groups;
+//
+//    bool FirstTime = true;
+//    FVector CurrentGroup = FVector::ZeroVector;
+//    for (int i = 0; i < Points.Num(); ++i)
+//    {
+//        int Num = Points[i];
+//
+//        if (FirstTime || Points[i - 1] != Points[i] - 1)
+//        {
+//            if (!FirstTime)
+//            {
+//                Groups.Add(CurrentGroup);
+//            }
+//
+//            FirstTime = false;
+//            CurrentGroup = FVector(Num, Num, 0);
+//        }
+//        else
+//        {
+//            CurrentGroup.Y += 1;
+//        }
+//    }
+//
+//    if (!FirstTime)
+//    {
+//        Groups.Add(CurrentGroup);
+//    }
+//
+//    for (auto Group : Groups)
+//    {
+//        if (Group.Y - Group.X < MinCorridorThickness)
+//        {
+//            Groups.Remove(Group);
+//        }
+//    }
+//
+//    return Groups;
+//}
+
 void ARoom::AddCorridors()
 {
 	if (IsLeaf()) return;
@@ -362,7 +410,6 @@ void ARoom::AddCorridors()
 	{
 		LeftRoom->AddCorridors();
 	}
-
 	if (RightRoom != nullptr)
 	{
 		RightRoom->AddCorridors();
@@ -377,6 +424,7 @@ void ARoom::AddCorridors()
 			TArray<int> Positions = GetIntersections(LeftRoomRightConnections, RightRoomLeftConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
 
+            // for (auto& p : Groups)
 			if (Groups.Num() > 0)
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
@@ -389,6 +437,9 @@ void ARoom::AddCorridors()
 				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
 
+				/**
+				 * Here LeftRoom or RightRoom might be not leaves
+				 */
                 Corridor->bIsCorridor = true;
                 Corridor->DoorwayLocations.Add(LeftRoom, FVector(NewRight,
                                                                  float(NewTop + NewBottom) / 2,
@@ -396,6 +447,15 @@ void ARoom::AddCorridors()
                 Corridor->DoorwayLocations.Add(RightRoom, FVector(NewLeft,
                                                                   float(NewTop + NewBottom) / 2,
                                                                   0) * FloorOffset);
+
+//                if (!LeftRoom->IsLeaf())
+//                {
+//                    UE_LOG(LogTemp, Error, TEXT("VER Left:<%s>\tRight:<%s>"), *LeftRoom->LeftRoom->GetName(), *LeftRoom->RightRoom->GetName());
+//                }
+//                if (!RightRoom->IsLeaf())
+//                {
+//                    UE_LOG(LogTemp, Error, TEXT("VER Right:<%s>\tRight:<%s>"), *RightRoom->LeftRoom->GetName(), *RightRoom->RightRoom->GetName());
+//                }
 			}
 		}
 		else
@@ -405,8 +465,9 @@ void ARoom::AddCorridors()
 			TArray<int> Positions = GetIntersections(LeftRoomBottomConnections, RightRoomTopConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
 
+            // for (auto& p : Groups)
 			if (Groups.Num() > 0)
-			{
+            {
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
                 int NewLeft = p.X;
@@ -417,6 +478,9 @@ void ARoom::AddCorridors()
 				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
 
+                /**
+                 * Here LeftRoom or RightRoom might be not leaves
+                 */
                 Corridor->bIsCorridor = true;
                 Corridor->DoorwayLocations.Add(LeftRoom, FVector(float(NewLeft + NewRight) / 2,
                                                                  NewTop,
@@ -424,7 +488,36 @@ void ARoom::AddCorridors()
                 Corridor->DoorwayLocations.Add(RightRoom, FVector(float(NewLeft + NewRight) / 2,
                                                                   NewBottom,
                                                                   0) * FloorOffset);
+
+//                if (!LeftRoom->IsLeaf())
+//                {
+//                    UE_LOG(LogTemp, Error, TEXT("HOR Left:<%s>\tRight:<%s>"), *LeftRoom->LeftRoom->GetName(), *LeftRoom->RightRoom->GetName());
+//                }
+//                if (!RightRoom->IsLeaf())
+//                {
+//                    UE_LOG(LogTemp, Error, TEXT("HOR Right:<%s>\tRight:<%s>"), *RightRoom->LeftRoom->GetName(), *RightRoom->RightRoom->GetName());
+//                }
 			}
 		}
 	}
+}
+
+//int h = 0;
+//Test(LeftRoom, RightRoom, h);
+void ARoom::Test(ARoom* L, ARoom* R, int& h)
+{
+    h++;
+    if (!L->IsLeaf())
+    {
+        UE_LOG(LogTemp, Error, TEXT("HAHA LEFT %i"), h);
+
+        Test(L->LeftRoom, L->RightRoom, h);
+    }
+
+    if (!R->IsLeaf())
+    {
+        UE_LOG(LogTemp, Error, TEXT("HAHA RIGHT %i"), h);
+
+        Test(R->LeftRoom, R->RightRoom, h);
+    }
 }

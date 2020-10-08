@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NavNode.h"
+#include "Room.h"
 #include "AIManager.generated.h"
 
 class AEnemyCharacter;
@@ -52,4 +53,7 @@ public:
 
 	void NotifyAgents(const FVector& NoisePosition, const float& Volume);
 
+private:
+    void ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB);
+    void RecursiveNodeConnection(ARoom* Corridor, TMap<ARoom*, TArray<NavNode*>> RNodes, ARoom* Room, NavNode* Node);
 };
