@@ -21,12 +21,16 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 		int Left;
+
 	UPROPERTY(VisibleAnywhere)
 		int Right;
+
 	UPROPERTY(VisibleAnywhere)
 		int Top;
+
 	UPROPERTY(VisibleAnywhere)
 		int Bottom;
+
 	UPROPERTY(VisibleAnywhere)
 		FVector CenterLocation;
 
@@ -38,8 +42,9 @@ public:
 	 * rooms it intersects and the coordinates.
 	 */
 	bool bIsCorridor = false;
-    UPROPERTY(VisibleAnywhere)
-        TArray<FVector> DoorwayLocations;
+
+	UPROPERTY(VisibleAnywhere)
+		TArray<FVector> DoorwayLocations;
 
 	const float FloorOffset = 200;
 	const int MinWidth = 8;

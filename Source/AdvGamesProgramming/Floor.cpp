@@ -14,4 +14,3 @@ void AFloor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
-

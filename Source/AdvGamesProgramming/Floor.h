@@ -8,14 +8,14 @@ UCLASS()
 class ADVGAMESPROGRAMMING_API AFloor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AFloor();
 
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
 
 };

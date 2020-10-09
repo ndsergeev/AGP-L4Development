@@ -33,7 +33,7 @@ public:
 		TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
 private:
-    const FVector VerticalSpawnOffset = FVector(0, 0, 50);
+	const FVector VerticalSpawnOffset = FVector(0, 0, 50);
 
 public:
 	TArray<NavNode*> GeneratePath(NavNode* StartNode, NavNode* EndNode);
@@ -58,5 +58,5 @@ public:
 	void NotifyAgents(const FVector& NoisePosition, const float& Volume);
 
 private:
-    void ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB);
+	void ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB);
 };

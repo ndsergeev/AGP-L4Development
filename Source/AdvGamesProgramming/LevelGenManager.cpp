@@ -5,9 +5,6 @@
 
 ALevelGenManager::ALevelGenManager()
 {
-	/**
-	 * Matt, please, do not forget to unTick actors
-	 */
 	PrimaryActorTick.bCanEverTick = false;
 }
 
@@ -31,18 +28,14 @@ void ALevelGenManager::GenerateLevel()
 	InitialRoom->DrawRoom();
 
 	TraverseRooms(InitialRoom);
-
-    LoopCorridors();
+	LoopCorridors();
 
 #ifdef UE_EDITOR
-    UE_LOG(LogTemp, Warning, TEXT("Corridors Number: %i"), Corridors.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Corridors Number: %i"), Corridors.Num());
 	UE_LOG(LogTemp, Warning, TEXT("Rooms Number: %i"), Rooms.Num());
 	for (const auto& Room : Rooms)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("<%s>\tW:%i,\t\tH:%i"),
-			*Room->GetName(),
-			Room->GetWidth(),
-			Room->GetHeight());
+		UE_LOG(LogTemp, Warning, TEXT("<%s>\tW:%i,\t\tH:%i"), *Room->GetName(), Room->GetWidth(), Room->GetHeight());
 	}
 #endif
 }
@@ -70,13 +63,11 @@ void ALevelGenManager::TraverseRooms(ARoom* Room)
 
 void ALevelGenManager::LoopCorridors()
 {
-    for (TActorIterator<ARoom> It(GetWorld()); It; ++It)
-    {
-        if (It->bIsCorridor)
-        {
-            Corridors.Add(*It);
-        }
-    }
+	for (TActorIterator<ARoom> It(GetWorld()); It; ++It)
+	{
+		if (It->bIsCorridor)
+		{
+			Corridors.Add(*It);
+		}
+	}
 }
-
-
