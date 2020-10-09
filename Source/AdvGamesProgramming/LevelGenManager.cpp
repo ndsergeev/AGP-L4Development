@@ -1,5 +1,6 @@
 #include "Room.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "LevelGenManager.h"
 
 ALevelGenManager::ALevelGenManager()
@@ -31,7 +32,10 @@ void ALevelGenManager::GenerateLevel()
 
 	TraverseRooms(InitialRoom);
 
+    LoopCorridors();
+
 #ifdef UE_EDITOR
+    UE_LOG(LogTemp, Warning, TEXT("Corridors Number: %i"), Corridors.Num());
 	UE_LOG(LogTemp, Warning, TEXT("Rooms Number: %i"), Rooms.Num());
 	for (const auto& Room : Rooms)
 	{
@@ -43,6 +47,13 @@ void ALevelGenManager::GenerateLevel()
 #endif
 }
 
+/**
+ * This function is looking for rooms which are leaves
+ * and drawn with tiles. It guarantees to return rooms
+ * not Corridors, if corridors are not pointed in any
+ * ->LeftRoom or ->RightRoom
+ * @param Room - Pointer to the Root of the Room tree
+ */
 void ALevelGenManager::TraverseRooms(ARoom* Room)
 {
 	if (!Room) return;
@@ -56,3 +67,16 @@ void ALevelGenManager::TraverseRooms(ARoom* Room)
 		Rooms.Add(Room);
 	}
 }
+
+void ALevelGenManager::LoopCorridors()
+{
+    for (TActorIterator<ARoom> It(GetWorld()); It; ++It)
+    {
+        if (It->bIsCorridor)
+        {
+            Corridors.Add(*It);
+        }
+    }
+}
+
+

@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "NavNode.h"
+#include "Room.h"
 #include "AIManager.generated.h"
 
 class AEnemyCharacter;
@@ -31,6 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Agents")
 		TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
+private:
+    const FVector VerticalSpawnOffset = FVector(0, 0, 50);
+
+public:
 	TArray<NavNode*> GeneratePath(NavNode* StartNode, NavNode* EndNode);
 
 	/**
@@ -46,9 +51,12 @@ public:
 	*/
 	NavNode* FindFurthestNode(const FVector& Location);
 
+	void GenerateNodes();
 	void PopulateNodes();
 	void CreateAgents();
 
 	void NotifyAgents(const FVector& NoisePosition, const float& Volume);
 
+private:
+    void ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB);
 };

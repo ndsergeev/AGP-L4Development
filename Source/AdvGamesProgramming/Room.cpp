@@ -39,7 +39,7 @@ void ARoom::Tick(float DeltaTime)
 void ARoom::SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom)
 {
 #ifdef UE_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
+//	UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
 #endif
 
 	this->Left = NewLeft;
@@ -166,7 +166,8 @@ void ARoom::CreateRoom()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
-	CenterLocation = { float(Left + Right + 1) / 2 * FloorOffset, float(Bottom + Top + 1) * FloorOffset, 0 };
+	auto HalfFloorOffset = FloorOffset / 2;
+	CenterLocation = { (Left + Right) * HalfFloorOffset, (Bottom + Top) * HalfFloorOffset, 0 };
 
 	/**
 	 * ToDo:
@@ -355,16 +356,12 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 
 void ARoom::AddCorridors()
 {
-	if (IsLeaf())
-	{
-		return;
-	}
+	if (IsLeaf()) return;
 
 	if (LeftRoom != nullptr)
 	{
 		LeftRoom->AddCorridors();
 	}
-
 	if (RightRoom != nullptr)
 	{
 		RightRoom->AddCorridors();
@@ -379,13 +376,29 @@ void ARoom::AddCorridors()
 			TArray<int> Positions = GetIntersections(LeftRoomRightConnections, RightRoomLeftConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
 
+            // for (auto& p : Groups)
 			if (Groups.Num() > 0)
 			{
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
+                int NewLeft = LeftRoom->Right - 1;
+                int NewRight = LeftRoom->Right + 2;
+                int NewTop = p.Y;
+                int NewBottom = p.X;
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(LeftRoom->Right - 1, LeftRoom->Right + 2, p.Y, p.X);
+				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
+
+				/**
+				 * Here LeftRoom or RightRoom might be not leaves
+				 */
+                Corridor->bIsCorridor = true;
+                Corridor->DoorwayLocations.Add(FVector(NewRight,
+                                                       float(NewTop + NewBottom) / 2,
+                                                       0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(FVector(NewLeft,
+                                                       float(NewTop + NewBottom) / 2,
+                                                       0) * FloorOffset);
 			}
 		}
 		else
@@ -395,13 +408,29 @@ void ARoom::AddCorridors()
 			TArray<int> Positions = GetIntersections(LeftRoomBottomConnections, RightRoomTopConnections);
 			TArray<FVector> Groups = GetIntersectionGroups(Positions);
 
+            // for (auto& p : Groups)
 			if (Groups.Num() > 0)
-			{
+            {
 				FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 
+                int NewLeft = p.X;
+                int NewRight = p.Y;
+                int NewTop = LeftRoom->Bottom + 1;
+                int NewBottom = LeftRoom->Bottom - 2;
 				auto* Corridor = GetWorld()->SpawnActor<ARoom>();
-				Corridor->SetSize(p.X, p.Y, LeftRoom->Bottom + 1, LeftRoom->Bottom - 2);
+				Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 				Corridor->DrawRoom();
+
+                /**
+                 * Here LeftRoom or RightRoom might be not leaves
+                 */
+                Corridor->bIsCorridor = true;
+                Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2,
+                                                       NewTop,
+                                                       0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2,
+                                                       NewBottom,
+                                                       0) * FloorOffset);
 			}
 		}
 	}
