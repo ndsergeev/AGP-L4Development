@@ -9,24 +9,24 @@ UCLASS()
 class ADVGAMESPROGRAMMING_API APropsGenerator : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	APropsGenerator();
 
-//	UPROPERTY(EditAnywhere)
-//        TMap<AActor*, int8> PropsToSpawn;
+	//UPROPERTY(EditAnywhere)
+	//	TMap<AActor*, int8> PropsToSpawn;
 
-    TSubclassOf<AActor> BottleToSpawn;
-    UPROPERTY(EditAnywhere)
-        uint8 BottleNum;
+	TSubclassOf<AActor> BottleToSpawn;
+	UPROPERTY(EditAnywhere)
+		uint8 BottleNum;
 
 private:
-    ALevelGenManager* LevelGenManager;
+	ALevelGenManager* LevelGenManager;
 
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SpawnProps(TSubclassOf<AActor> A, uint8 N);

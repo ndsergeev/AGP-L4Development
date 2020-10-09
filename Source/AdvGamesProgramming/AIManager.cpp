@@ -23,12 +23,12 @@ void AAIManager::BeginPlay()
 
 	if (CurrentMapName == "UEDPIE_0_ProcGenMap" || CurrentMapName == "UEDPIE_0_ProcGenMap-Matt")
 	{
-	    // Procedural node generation
+		// Procedural node generation
 		GenerateNodes();
 	}
 	else
 	{
-        // Static node generation
+		// Static node generation
 		PopulateNodes();
 	}
 
@@ -187,9 +187,9 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 			Agent->UpdateState(AgentState::SEARCH);
 			Agent->LastNoisePosition = NoisePosition;
 			Agent->Path.Empty();
-//#ifdef UE_EDITOR
-//			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
-//#endif
+			//#ifdef UE_EDITOR
+			//			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
+			//#endif
 		}
 	}
 }
