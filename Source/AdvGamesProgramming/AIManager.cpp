@@ -1,7 +1,6 @@
 #include "AIManager.h"
 #include "EngineUtils.h"
 #include "EnemyCharacter.h"
-#include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "DrawDebugHelpers.h"
 #include "LevelGenManager.h"
@@ -31,6 +30,8 @@ void AAIManager::BeginPlay()
 	    PopulateNodes();
     }
 
+    CreateAgents();
+
 #ifdef UE_EDITOR
     for (auto& Node : AllNodes)
     {
@@ -42,8 +43,6 @@ void AAIManager::BeginPlay()
         }
     }
 #endif
-
-//	CreateAgents();
 }
 
 void AAIManager::GenerateNodes()
@@ -54,148 +53,69 @@ void AAIManager::GenerateNodes()
      * Make sure ALevelGenManager Finish its BeginPlay() function
      */
     TActorIterator<ALevelGenManager> It(GetWorld());
+    if (!It) return;
+
     if (!It->HasActorBegunPlay())
     {
         It->DispatchBeginPlay();
     }
-    TArray<ARoom*>* Rooms = &It->Rooms;
-    TArray<ARoom*>* Corridors = &It->Corridors;
-
-    auto VerticalOffset = FVector(0, 0, 50);
-
-    TMap<ARoom*, TArray<NavNode*>> RoomNodes;
 
     /**
      * The Loop spawns nodes in the center of the each Room
      */
-    for (const auto& Room : *Rooms)
+    TMap<NavNode*, ARoom*> RoomNodes;
+    for (const auto& Room : It->Rooms)
     {
         auto* Node = new NavNode;
-        Node->Location = Room->CenterLocation + VerticalOffset;
+        Node->Location = Room->CenterLocation + VerticalSpawnOffset;
 
-        auto NodeArr = TArray<NavNode*>( { Node } );
-
-        RoomNodes.Add(Room, NodeArr);
+        RoomNodes.Add(Node, Room);
         AllNodes.Add(Node);
     }
 
-    for (const auto& Room : RoomNodes)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("%s\t%i"), *Room.Key->GetName(), Room.Value.Num());
-        for (const auto& N : Room.Value)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("\t%s\t%i"), *N->Location.ToString(), N->ConnectedNodes.Num());
-        }
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("RoomNodes: %i"), RoomNodes.Num())
-
     /**
-     * The Loop spawns two nodes for each corridor and maps to the
-     * corresponding room. Two Corridor nodes link to each other here
+     * The Loop spawns nodes for both sides of the each Corridor
      */
-    for (const auto& Corridor : *Corridors)
+    TArray<NavNode*> CorridorNodes;
+    for (const auto& Corridor : It->Corridors)
     {
-        auto NodeArr = TArray<NavNode*>();
-        for (const auto& Door : Corridor->DoorwayLocations)
+        TArray<NavNode*> DoorNodes;
+
+        for (const auto& DoorLocation : Corridor->DoorwayLocations)
         {
             auto* Node = new NavNode;
-            Node->Location = Door.Value + VerticalOffset;
+            Node->Location = DoorLocation + VerticalSpawnOffset;
 
-            // Points to the room it is linked to
-            auto* RoomEntrance = Door.Key;
-
-            if (RoomEntrance->IsLeaf())
-            {
-                
-            }
-
-            if (RoomNodes.Contains(RoomEntrance))
-            {
-                ConnectTwoNodes(RoomNodes[RoomEntrance][0], Node);
-            }
-            else
-            {
-                RecursiveNodeConnection(Corridor, RoomNodes, Door.Key, Node);
-//                auto& NeighbourDoor = RoomEntrance->Neighbour;
-//                RecursiveNodeConnection(Corridor, RoomNodes, RoomEntrance, Node);
-            }
-
-            NodeArr.Add(Node);
+            DoorNodes.Add(Node);
+            CorridorNodes.Add(Node);
             AllNodes.Add(Node);
         }
-//        ConnectTwoNodes(NodeArr[0], NodeArr[1]);
+
+        ConnectTwoNodes(DoorNodes[0], DoorNodes[1]);
     }
 
-    for (const auto& Corridor : *Corridors)
+    for (const auto& DNode : CorridorNodes)
     {
-        UE_LOG(LogTemp, Warning, TEXT("Corridor Name <%s>"), *Corridor->GetName());
-        for (const auto& Door : Corridor->DoorwayLocations)
+        UE_LOG(LogTemp, Warning, TEXT("Calculation Start"));
+        for (const auto& RNode : RoomNodes)
         {
-            int sorryWhat = (Door.Key->IsLeaf()) ? 0 : 1;
-            UE_LOG(LogTemp, Warning, TEXT("\tDoor Side of <%s> W:%i\tH:%i\tL:%i"), *Door.Key->GetName(), Door.Key->GetWidth(), Door.Key->GetHeight(), sorryWhat);
+            auto RigLef = (RNode.Value->Right - RNode.Value->Left + 2)/2 * RNode.Value->FloorOffset;
+            auto TopBot = (RNode.Value->Top - RNode.Value->Bottom + 2)/2 * RNode.Value->FloorOffset;
+            auto Center = RNode.Value->CenterLocation;
+
+            if (!(Center.Y - TopBot <= DNode->Location.Y && DNode->Location.Y <= Center.Y + TopBot)) continue;
+            if (!(Center.X - RigLef <= DNode->Location.X && DNode->Location.X <= Center.X + RigLef)) continue;
+
+            ConnectTwoNodes(DNode, RNode.Key);
         }
     }
 
-//    for (const auto& Room : RoomNodes)
-//    {
-//        UE_LOG(LogTemp, Warning, TEXT("%s\t%i"), *Room.Key->GetName(), Room.Value.Num());
-//        for (const auto& N : Room.Value)
-//        {
-//            UE_LOG(LogTemp, Warning, TEXT("\t%s\t%i"), *N->Location.ToString(), N->ConnectedNodes.Num());
-//        }
-//    }
-
+    CorridorNodes.Empty();
     RoomNodes.Empty();
 
 #ifdef UE_EDITOR
     UE_LOG(LogTemp, Warning, TEXT("Nodes Number: %i"), AllNodes.Num());
 #endif
-}
-
-void AAIManager::RecursiveNodeConnection(ARoom* Corridor, TMap<ARoom*, TArray<NavNode*>> RNodes, ARoom* Room, NavNode* Node)
-{
-//    if (!Room->LeftRoom->IsLeaf()) return;
-//    if (!Room->RightRoom->IsLeaf()) return;
-
-    if (!Room->LeftRoom->IsLeaf())
-    {
-        RecursiveNodeConnection(Corridor, RNodes, Room->LeftRoom, Node);
-    }
-    if (!Room->RightRoom->IsLeaf())
-    {
-        RecursiveNodeConnection(Corridor, RNodes, Room->RightRoom, Node);
-    }
-
-    UE_LOG(LogTemp, Error, TEXT("Recursive"));
-//    if (!Room->IsHorizontalSplit)
-//    {
-//        if (RNodes.Contains(Room->LeftRoom))
-//        {
-//            if (Corridor->DoorwayLocations.Contains(Room))
-//            {
-//                ConnectTwoNodes(RNodes[Room->LeftRoom][0], Node);
-//                UE_LOG(LogTemp, Warning, TEXT("\tLeft:\t%s"), *Room->LeftRoom->GetName());
-//                UE_LOG(LogTemp, Warning, TEXT("\tCurrent:\t%s"), *Room->GetName());
-//            }
-//        }
-//    }
-//    else
-    {
-        if (RNodes.Contains(Room->RightRoom))
-        {
-            if (Corridor->DoorwayLocations.Contains(Room))
-            {
-                ConnectTwoNodes(RNodes[Room->RightRoom][0], Node);
-                UE_LOG(LogTemp, Warning, TEXT("\tLeft:\t\t%s"), *Room->RightRoom->GetName());
-                UE_LOG(LogTemp, Warning, TEXT("\tCurrent:\t%s"), *Room->GetName());
-                for (auto& Door : Corridor->DoorwayLocations)
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("\tDoor:\t\t%s"), *Door.Key->GetName());
-                }
-            }
-        }
-    }
 }
 
 void AAIManager::ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB)
@@ -241,17 +161,27 @@ void AAIManager::PopulateNodes()
 
 void AAIManager::CreateAgents()
 {
+    /**
+     * This function is stable just if Agent spawns upper than the walking mesh
+     */
 	if (!AgentToSpawn || AllNodes.Num() < 1) return;
 
+#ifdef UE_EDITOR
+    UE_LOG(LogTemp, Error, TEXT("Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
+#endif
 	for (int32 i = 0; i < NumAI; ++i)
 	{
 		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
-		auto Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
-                                                       AllNodes[RandIndex]->Location,
-                                                       FRotator::ZeroRotator);
-		Agent->Manager = this;
-		Agent->CurrentNode = AllNodes[RandIndex];
-		AllAgents.Add(Agent);
+		auto* SpawnNode = AllNodes[RandIndex];
+        auto* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
+                                                              SpawnNode->Location + VerticalSpawnOffset,
+                                                              FRotator::ZeroRotator);
+		if (Agent)
+        {
+            Agent->Manager = this;
+            Agent->CurrentNode = SpawnNode;
+            AllAgents.Add(Agent);
+        }
 	}
 }
 
@@ -265,7 +195,9 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 			Agent->UpdateState(AgentState::SEARCH);
 			Agent->LastNoisePosition = NoisePosition;
 			Agent->Path.Empty();
+#ifdef UE_EDITOR
 			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
+#endif
 		}
 	}
 }
@@ -313,10 +245,12 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
             while (CurrentNode != StartNode)
             {
                 CurrentNode = CurrentNode->CameFrom;
+#ifdef UE_EDITOR
                 if (CurrentNode->CameFrom == nullptr)
                 {
                     UE_LOG(LogTemp, Error, TEXT("CameFrom IS NULLPTR"));
                 }
+#endif
                 Path.Add(CurrentNode);
             }
             return Path;
@@ -340,7 +274,6 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
         }
     }
 
-    //UE_LOG(LogTemp, Error, TEXT("NO PATH FOUND"));
     return TArray<NavNode*>();
 }
 
@@ -360,7 +293,6 @@ NavNode* AAIManager::FindNearestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName());
 	return NearestNode;
 }
 
@@ -380,7 +312,6 @@ NavNode* AAIManager::FindFurthestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName());
 	return FurthestNode;
 }
 

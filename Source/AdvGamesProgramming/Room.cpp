@@ -106,9 +106,6 @@ void ARoom::HorizontalSplit()
 		RightRoom->SetSize(Left, Right, SplitCoord - 1, Bottom);
 		RightRoom->Split();
 	}
-
-    LeftRoom->Neighbour = RightRoom;
-    RightRoom->Neighbour = LeftRoom;
 }
 
 void ARoom::VerticalSplit()
@@ -130,9 +127,6 @@ void ARoom::VerticalSplit()
 		RightRoom->SetSize(SplitCoord, Right, Top, Bottom);
 		RightRoom->Split();
 	}
-
-    LeftRoom->Neighbour = RightRoom;
-    RightRoom->Neighbour = LeftRoom;
 }
 
 bool ARoom::IsLeaf() const
@@ -360,48 +354,6 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 	return Groups;
 }
 
-//TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
-//{
-//    TArray<FVector> Groups;
-//
-//    bool FirstTime = true;
-//    FVector CurrentGroup = FVector::ZeroVector;
-//    for (int i = 0; i < Points.Num(); ++i)
-//    {
-//        int Num = Points[i];
-//
-//        if (FirstTime || Points[i - 1] != Points[i] - 1)
-//        {
-//            if (!FirstTime)
-//            {
-//                Groups.Add(CurrentGroup);
-//            }
-//
-//            FirstTime = false;
-//            CurrentGroup = FVector(Num, Num, 0);
-//        }
-//        else
-//        {
-//            CurrentGroup.Y += 1;
-//        }
-//    }
-//
-//    if (!FirstTime)
-//    {
-//        Groups.Add(CurrentGroup);
-//    }
-//
-//    for (auto Group : Groups)
-//    {
-//        if (Group.Y - Group.X < MinCorridorThickness)
-//        {
-//            Groups.Remove(Group);
-//        }
-//    }
-//
-//    return Groups;
-//}
-
 void ARoom::AddCorridors()
 {
 	if (IsLeaf()) return;
@@ -441,21 +393,12 @@ void ARoom::AddCorridors()
 				 * Here LeftRoom or RightRoom might be not leaves
 				 */
                 Corridor->bIsCorridor = true;
-                Corridor->DoorwayLocations.Add(LeftRoom, FVector(NewRight,
-                                                                 float(NewTop + NewBottom) / 2,
-                                                                 0) * FloorOffset);
-                Corridor->DoorwayLocations.Add(RightRoom, FVector(NewLeft,
-                                                                  float(NewTop + NewBottom) / 2,
-                                                                  0) * FloorOffset);
-
-//                if (!LeftRoom->IsLeaf())
-//                {
-//                    UE_LOG(LogTemp, Error, TEXT("VER Left:<%s>\tRight:<%s>"), *LeftRoom->LeftRoom->GetName(), *LeftRoom->RightRoom->GetName());
-//                }
-//                if (!RightRoom->IsLeaf())
-//                {
-//                    UE_LOG(LogTemp, Error, TEXT("VER Right:<%s>\tRight:<%s>"), *RightRoom->LeftRoom->GetName(), *RightRoom->RightRoom->GetName());
-//                }
+                Corridor->DoorwayLocations.Add(FVector(NewRight,
+                                                       float(NewTop + NewBottom) / 2,
+                                                       0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(FVector(NewLeft,
+                                                       float(NewTop + NewBottom) / 2,
+                                                       0) * FloorOffset);
 			}
 		}
 		else
@@ -482,42 +425,13 @@ void ARoom::AddCorridors()
                  * Here LeftRoom or RightRoom might be not leaves
                  */
                 Corridor->bIsCorridor = true;
-                Corridor->DoorwayLocations.Add(LeftRoom, FVector(float(NewLeft + NewRight) / 2,
-                                                                 NewTop,
-                                                                 0) * FloorOffset);
-                Corridor->DoorwayLocations.Add(RightRoom, FVector(float(NewLeft + NewRight) / 2,
-                                                                  NewBottom,
-                                                                  0) * FloorOffset);
-
-//                if (!LeftRoom->IsLeaf())
-//                {
-//                    UE_LOG(LogTemp, Error, TEXT("HOR Left:<%s>\tRight:<%s>"), *LeftRoom->LeftRoom->GetName(), *LeftRoom->RightRoom->GetName());
-//                }
-//                if (!RightRoom->IsLeaf())
-//                {
-//                    UE_LOG(LogTemp, Error, TEXT("HOR Right:<%s>\tRight:<%s>"), *RightRoom->LeftRoom->GetName(), *RightRoom->RightRoom->GetName());
-//                }
+                Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2,
+                                                       NewTop,
+                                                       0) * FloorOffset);
+                Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2,
+                                                       NewBottom,
+                                                       0) * FloorOffset);
 			}
 		}
 	}
-}
-
-//int h = 0;
-//Test(LeftRoom, RightRoom, h);
-void ARoom::Test(ARoom* L, ARoom* R, int& h)
-{
-    h++;
-    if (!L->IsLeaf())
-    {
-        UE_LOG(LogTemp, Error, TEXT("HAHA LEFT %i"), h);
-
-        Test(L->LeftRoom, L->RightRoom, h);
-    }
-
-    if (!R->IsLeaf())
-    {
-        UE_LOG(LogTemp, Error, TEXT("HAHA RIGHT %i"), h);
-
-        Test(R->LeftRoom, R->RightRoom, h);
-    }
 }

@@ -32,6 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Agents")
 		TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
+private:
+    const FVector VerticalSpawnOffset = FVector(0, 0, 50);
+
+public:
 	TArray<NavNode*> GeneratePath(NavNode* StartNode, NavNode* EndNode);
 
 	/**
@@ -55,5 +59,4 @@ public:
 
 private:
     void ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB);
-    void RecursiveNodeConnection(ARoom* Corridor, TMap<ARoom*, TArray<NavNode*>> RNodes, ARoom* Room, NavNode* Node);
 };

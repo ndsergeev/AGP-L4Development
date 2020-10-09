@@ -39,7 +39,7 @@ public:
 	 */
 	bool bIsCorridor = false;
     UPROPERTY(VisibleAnywhere)
-        TMap<ARoom*, FVector> DoorwayLocations;
+        TArray<FVector> DoorwayLocations;
 
 	const float FloorOffset = 200;
 	const int MinWidth = 8;
@@ -59,10 +59,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		ARoom* RightRoom;
-
-	// Neighbour is a parallel node (second child of the parent)
-	UPROPERTY(EditAnywhere)
-	    ARoom* Neighbour;
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class AFloor> FloorToSpawn;
@@ -88,7 +84,4 @@ public:
 	TArray<int> GetIntersections(const TArray<int>& LeftConnections, const TArray<int>& RightConnections);
 	TArray<FVector> GetIntersectionGroups(TArray<int> Points);
 	void AddCorridors();
-
-    void Test(ARoom* L, ARoom* R, int& h);
-
 };
