@@ -23,10 +23,12 @@ void AAIManager::BeginPlay()
 
 	if (CurrentMapName == "UEDPIE_0_ProcGenMap" || CurrentMapName == "UEDPIE_0_ProcGenMap-Matt")
 	{
+	    // Procedural node generation
 		GenerateNodes();
 	}
 	else
 	{
+        // Static node generation
 		PopulateNodes();
 	}
 
@@ -45,8 +47,6 @@ void AAIManager::BeginPlay()
 
 void AAIManager::GenerateNodes()
 {
-	UE_LOG(LogTemp, Error, TEXT("GenerateNodes"));
-
 	/**
 	 * Make sure ALevelGenManager Finish its BeginPlay() function
 	 */
@@ -94,11 +94,10 @@ void AAIManager::GenerateNodes()
 
 	for (const auto& DNode : CorridorNodes)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Calculation Start"));
 		for (const auto& RNode : RoomNodes)
 		{
-			auto RigLef = (RNode.Value->Right - RNode.Value->Left + 2) / 2 * RNode.Value->FloorOffset;
-			auto TopBot = (RNode.Value->Top - RNode.Value->Bottom + 2) / 2 * RNode.Value->FloorOffset;
+			auto RigLef = float(RNode.Value->Right - RNode.Value->Left + 2) / 2 * RNode.Value->FloorOffset;
+			auto TopBot = float(RNode.Value->Top - RNode.Value->Bottom + 2) / 2 * RNode.Value->FloorOffset;
 			auto Center = RNode.Value->CenterLocation;
 
 			if (!(Center.Y - TopBot <= DNode->Location.Y && DNode->Location.Y <= Center.Y + TopBot)) continue;
@@ -110,10 +109,6 @@ void AAIManager::GenerateNodes()
 
 	CorridorNodes.Empty();
 	RoomNodes.Empty();
-
-#ifdef UE_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("Nodes Number: %i"), AllNodes.Num());
-#endif
 }
 
 void AAIManager::ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB)
@@ -164,7 +159,7 @@ void AAIManager::CreateAgents()
 	if (!AgentToSpawn || AllNodes.Num() < 1) return;
 
 #ifdef UE_EDITOR
-	UE_LOG(LogTemp, Error, TEXT("Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
 #endif
 	for (int32 i = 0; i < NumAI; ++i)
 	{
@@ -192,9 +187,9 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 			Agent->UpdateState(AgentState::SEARCH);
 			Agent->LastNoisePosition = NoisePosition;
 			Agent->Path.Empty();
-#ifdef UE_EDITOR
-			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
-#endif
+//#ifdef UE_EDITOR
+//			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
+//#endif
 		}
 	}
 }
