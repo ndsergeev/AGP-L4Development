@@ -5,6 +5,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/Range.h"
+#include "Components/StaticMeshComponent.h"
 
 ARoom::ARoom()
 {
@@ -23,6 +24,12 @@ ARoom::ARoom()
 	if (FloorBlueprint.Class != nullptr)
 	{
 		FloorToSpawn = FloorBlueprint.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<AFloor> WallBlueprint(TEXT("/Game/Blueprints/WallBlueprint"));
+	if (WallBlueprint.Class != nullptr)
+	{
+		WallToSpawn = WallBlueprint.Class;
 	}
 }
 
@@ -162,30 +169,116 @@ void ARoom::CreateRoom()
 	UWorld* World = GetWorld();
 	if (!World) return;
 
-	FRotator Rotator(0, 0, 0);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
 	auto HalfFloorOffset = FloorOffset / 2;
-	CenterLocation = { (Left + Right) * HalfFloorOffset, (Bottom + Top) * HalfFloorOffset, 0 };
+	CenterLocation = {(Left + Right) * HalfFloorOffset, (Bottom + Top) * HalfFloorOffset, 0};
 
-	/**
-	 * ToDo:
-	 * - Scale a single tile here
-	 *   - We do not need this expensive function to produce a lot
-	 *     of Tiles 76 Polygons each. It is not UE5!
-	 *
-	 * Matt- We probably want to create a c++ function to call,
-	 *       and then access those variables from a BP to resize.
-	 */
-	for (int x = Left; x <= Right; ++x)
+	FRotator FloorRotator(0, 0, 0);
+
+	if (auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, CenterLocation, FloorRotator, SpawnParams))
 	{
-		for (int y = Bottom; y <= Top; ++y)
+		if (auto* FloorMesh = Floor->FindComponentByClass<UStaticMeshComponent>())
 		{
-			FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
-			auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
+			FloorMesh->SetWorldScale3D(FVector(GetWidth(), GetHeight(), 1));
 		}
 	}
+
+
+
+	float MinWallOffset = 0.5f;
+
+	float MaxHorizontalOffset = 2.0f;
+	float MaxVerticalOffset = 2.5f;
+
+	float WallOffset = 0.56;
+	int WallHeightOffset = 110;
+
+	for (float x = Left - MinWallOffset; x < Right + MaxHorizontalOffset; ++x)
+	{
+		FVector LeftSpawnLocation((x - MinWallOffset) * FloorOffset, (Top + WallOffset) * FloorOffset, WallHeightOffset);
+		FRotator LeftWallRotation(0, 180, 0);
+		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+	}
+
+	for (float x = Left - MinWallOffset; x < Right + MaxHorizontalOffset; ++x)
+	{
+		FVector LeftSpawnLocation((x - MinWallOffset) * FloorOffset, (Bottom - WallOffset) * FloorOffset, WallHeightOffset);
+		FRotator LeftWallRotation(0, 0, 0);
+		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+	}
+
+	for (float y = Bottom - MinWallOffset; y < Top + MaxVerticalOffset; ++y)
+	{
+		FVector LeftSpawnLocation((Left - WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
+		FRotator LeftWallRotation(0, -90, 0);
+		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+	}
+
+	for (float y = Bottom - MinWallOffset; y < Top + MaxVerticalOffset; ++y)
+	{
+		FVector LeftSpawnLocation((Right + WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
+		FRotator LeftWallRotation(0, 90, 0);
+		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+	}
+
+
+
+	// Generate 1 mesh per wall, and scale it: (no doors)
+
+	//FVector TopSpawnLocation(CenterLocation.X, (Top + WallOffset) * FloorOffset, WallHeightOffset);
+	//FRotator TopWallRotation(0, 180, 0);
+	//if (auto* TopWall = World->SpawnActor<AFloor>(WallToSpawn, TopSpawnLocation, TopWallRotation, SpawnParams))
+	//{
+	//	if (auto* WallMesh = TopWall->FindComponentByClass<UStaticMeshComponent>())
+	//	{
+	//		//WallMesh->SetWorldScale3D(FVector(GetWidth(), 1, 1));
+	//	}
+	//}
+
+	//FVector BottomSpawnLocation(CenterLocation.X, (Bottom - WallOffset) * FloorOffset, WallHeightOffset);
+	//FRotator BottomWallRotation(0, 0, 0);
+	//if (auto* BottomWall = World->SpawnActor<AFloor>(WallToSpawn, BottomSpawnLocation, BottomWallRotation, SpawnParams))
+	//{
+	//	if (auto* WallMesh = BottomWall->FindComponentByClass<UStaticMeshComponent>())
+	//	{
+	//		//WallMesh->SetWorldScale3D(FVector(GetWidth(), 1, 1));
+	//	}
+	//}
+
+	//FVector LeftSpawnLocation((Left - WallOffset) * FloorOffset, CenterLocation.Y, WallHeightOffset);
+	//FRotator LeftWallRotation(0, -90, 0);
+	//if (auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams))
+	//{
+	//	if (auto* WallMesh = LeftWall->FindComponentByClass<UStaticMeshComponent>())
+	//	{
+	//		//WallMesh->SetWorldScale3D(FVector(GetHeight(), 1, 1));
+	//	}
+	//}
+
+	//FVector RightSpawnLocation((Right + WallOffset) * FloorOffset, CenterLocation.Y, WallHeightOffset);
+	//FRotator RightWallRotation(0, 90, 0);
+	//if (auto* RightWall = World->SpawnActor<AFloor>(WallToSpawn, RightSpawnLocation, RightWallRotation, SpawnParams))
+	//{
+	//	if (auto* WallMesh = RightWall->FindComponentByClass<UStaticMeshComponent>())
+	//	{
+	//		//WallMesh->SetWorldScale3D(FVector(GetHeight(), 1, 1));
+	//	}
+	//}
+
+
+
+	// spawn multiple smaller floor tiles
+
+	//for (int x = Left; x <= Right; ++x)
+	//{
+	//	for (int y = Bottom; y <= Top; ++y)
+	//	{
+	//		FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
+	//		auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
+	//	}
+	//}
 }
 
 void ARoom::Trim()
@@ -239,11 +332,11 @@ TArray<int> ARoom::GetRightConnections()
 	{
 		if (RightRoom != nullptr)
 		{
-			Connections.Append(LeftRoom->GetRightConnections());
+			Connections.Append(RightRoom->GetRightConnections());
 		}
 		if (IsHorizontalSplit && LeftRoom != nullptr)
 		{
-			Connections.Append(RightRoom->GetRightConnections());
+			Connections.Append(LeftRoom->GetRightConnections());
 		}
 	}
 	else
@@ -287,13 +380,13 @@ TArray<int> ARoom::GetBottomConnections()
 
 	if (!IsLeaf())
 	{
-		if (RightRoom != nullptr)
+		if (LeftRoom != nullptr)
 		{
 			Connections.Append(LeftRoom->GetBottomConnections());
 		}
 		if (IsVerticalSplit && LeftRoom != nullptr)
 		{
-			Connections.Append(RightRoom->GetBottomConnections());
+			Connections.Append(LeftRoom->GetBottomConnections());
 		}
 	}
 	else
@@ -309,11 +402,18 @@ TArray<int> ARoom::GetBottomConnections()
 TArray<int> ARoom::GetIntersections(const TArray<int>& LeftConnections, const TArray<int>& RightConnections)
 {
 	TArray<int> Intersections;
-	for (const auto& LeftVector : LeftConnections)
+
+	if (LeftConnections.Num() > 0 && RightConnections.Num() > 0)
 	{
-		if (RightConnections.Contains(LeftVector))
+		for (const auto& LeftVector : LeftConnections)
 		{
-			Intersections.Push(LeftVector);
+			for (const auto& RightVector : RightConnections)
+			{
+				if (LeftVector == RightVector)
+				{
+					Intersections.Push(LeftVector);
+				}
+			}
 		}
 	}
 
@@ -351,6 +451,15 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 		Groups.Add(CurrentGroup);
 	}
 
+	for (int i = 0; i < Groups.Num(); ++i)
+	{
+		FVector Pos = Groups[i];
+		if (Pos.Y - Pos.X < MinCorridorThickness)
+		{
+			Groups.Remove(Pos);
+		}
+	}
+
 	return Groups;
 }
 
@@ -362,6 +471,7 @@ void ARoom::AddCorridors()
 	{
 		LeftRoom->AddCorridors();
 	}
+
 	if (RightRoom != nullptr)
 	{
 		RightRoom->AddCorridors();
@@ -399,6 +509,7 @@ void ARoom::AddCorridors()
                 Corridor->DoorwayLocations.Add(FVector(NewLeft,
                                                        float(NewTop + NewBottom) / 2,
                                                        0) * FloorOffset);
+
 			}
 		}
 		else
@@ -431,6 +542,7 @@ void ARoom::AddCorridors()
                 Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2,
                                                        NewBottom,
                                                        0) * FloorOffset);
+
 			}
 		}
 	}

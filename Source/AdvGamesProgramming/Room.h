@@ -63,6 +63,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class AFloor> FloorToSpawn;
 
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class AFloor> WallToSpawn;
+
 	void SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom);
 	int GetWidth();
 	int GetHeight();
@@ -84,4 +87,5 @@ public:
 	TArray<int> GetIntersections(const TArray<int>& LeftConnections, const TArray<int>& RightConnections);
 	TArray<FVector> GetIntersectionGroups(TArray<int> Points);
 	void AddCorridors();
+
 };
