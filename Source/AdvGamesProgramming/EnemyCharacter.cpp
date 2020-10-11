@@ -160,7 +160,7 @@ void AEnemyCharacter::UpdateState(AgentState NewState)
 
 void AEnemyCharacter::AgentPatrol()
 {
-	if (Path.Num() == 0 && Manager != NULL)
+	if (Path.Num() == 0 && Manager)
 	{
 		//UE_LOG(LogTemp, Error, TEXT("AgentPatrol - New Path"));
 		Path = Manager->GeneratePath(CurrentNode, Manager->AllNodes[FMath::RandRange(0, Manager->AllNodes.Num() - 1)]);
@@ -215,7 +215,7 @@ void AEnemyCharacter::AgentSearch()
 
 void AEnemyCharacter::MoveAlongPath()
 {
-	if (Path.Num() > 0 && Manager != NULL)
+	if (Path.Num() > 0 && Manager)
 	{
 		//UE_LOG(LogTemp, Display, TEXT("Current Node: %s"), *CurrentNode->GetName());
 		if ((GetActorLocation() - CurrentNode->Location).IsNearlyZero(100.0f))

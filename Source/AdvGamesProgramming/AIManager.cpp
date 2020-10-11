@@ -1,10 +1,9 @@
 #include "AIManager.h"
 #include "EngineUtils.h"
 #include "EnemyCharacter.h"
-#include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "DrawDebugHelpers.h"
-
+#include "LevelGenManager.h"
 #include "NavigationNode.h"
 
 AAIManager::AAIManager()
@@ -16,19 +15,196 @@ void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PopulateNodes();
+	/** ToDo:
+	 * 1. Decompose this class to AIManager and AINodeGenerator
+	 * 2. Make better map checker
+	 */
+	auto CurrentMapName = GetWorld()->GetMapName();
+
+	if (CurrentMapName == "UEDPIE_0_ProcGenMap" || CurrentMapName == "UEDPIE_0_ProcGenMap-Matt")
+	{
+		// Procedural node generation
+		GenerateNodes();
+	}
+	else
+	{
+		// Static node generation
+		PopulateNodes();
+	}
+
 	CreateAgents();
+
+#ifdef UE_EDITOR
+	for (auto& Node : AllNodes)
+	{
+		for (auto& ConnectedNode : Node->ConnectedNodes)
+		{
+			DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Black, true, -1.0f, '\000', 10.0f);
+		}
+	}
+#endif
+}
+
+void AAIManager::GenerateNodes()
+{
+	/**
+	 * Make sure ALevelGenManager Finish its BeginPlay() function
+	 */
+	TActorIterator<ALevelGenManager> It(GetWorld());
+	if (!It) return;
+
+	if (!It->HasActorBegunPlay())
+	{
+		It->DispatchBeginPlay();
+	}
+
+	/**
+	 * The Loop spawns nodes in the center of the each Room
+	 */
+	TMap<NavNode*, ARoom*> RoomNodes;
+	for (const auto& Room : It->Rooms)
+	{
+		auto* Node = new NavNode;
+		Node->Location = Room->CenterLocation + VerticalSpawnOffset;
+
+		RoomNodes.Add(Node, Room);
+		AllNodes.Add(Node);
+	}
+
+	/**
+	 * The Loop spawns nodes for both sides of the each Corridor
+	 */
+	TArray<NavNode*> CorridorNodes;
+	for (const auto& Corridor : It->Corridors)
+	{
+		TArray<NavNode*> DoorNodes;
+
+		for (const auto& DoorLocation : Corridor->DoorwayLocations)
+		{
+			auto* Node = new NavNode;
+			Node->Location = DoorLocation + VerticalSpawnOffset;
+
+			DoorNodes.Add(Node);
+			CorridorNodes.Add(Node);
+			AllNodes.Add(Node);
+		}
+
+		ConnectTwoNodes(DoorNodes[0], DoorNodes[1]);
+	}
+
+	for (const auto& DNode : CorridorNodes)
+	{
+		for (const auto& RNode : RoomNodes)
+		{
+			auto RigLef = float(RNode.Value->Right - RNode.Value->Left + 2) / 2 * RNode.Value->FloorOffset;
+			auto TopBot = float(RNode.Value->Top - RNode.Value->Bottom + 2) / 2 * RNode.Value->FloorOffset;
+			auto Center = RNode.Value->CenterLocation;
+
+			if (!(Center.Y - TopBot <= DNode->Location.Y && DNode->Location.Y <= Center.Y + TopBot)) continue;
+			if (!(Center.X - RigLef <= DNode->Location.X && DNode->Location.X <= Center.X + RigLef)) continue;
+
+			ConnectTwoNodes(DNode, RNode.Key);
+		}
+	}
+
+	CorridorNodes.Empty();
+	RoomNodes.Empty();
+}
+
+void AAIManager::ConnectTwoNodes(NavNode* NodeA, NavNode* NodeB)
+{
+	if (NodeA == NodeB || !NodeA || !NodeB) return;
+
+	auto Distance = FVector::Distance(NodeA->Location, NodeB->Location);
+	NodeA->ConnectedNodes.Add(NodeB, Distance);
+	NodeB->ConnectedNodes.Add(NodeA, Distance);
+}
+
+void AAIManager::PopulateNodes()
+{
+	// Exist JUST to copy data from ANavigationNode to NavNode
+	TMap<ANavigationNode*, NavNode*> MatchMap;
+
+	// Copy Nodes of ANavigationNode to NavNode
+	for (TActorIterator<ANavigationNode> It(GetWorld()); It; ++It)
+	{
+		auto* Node = new NavNode;
+		Node->Location = It->GetActorLocation();
+
+
+		MatchMap.Add(*It, Node);
+		AllNodes.Add(Node);
+	}
+
+	// Copy ConnectedNodes of ANavigationNode to NavNode
+	for (auto& Match : MatchMap)
+	{
+		for (auto& Node : Match.Key->ConnectedNodes) // Match.Key is <ANavigationNode*>
+		{
+			if (MatchMap.Contains(Node.Key))
+			{
+				Match.Value->ConnectedNodes.Add(MatchMap[Node.Key], Node.Value);
+			}
+		}
+	}
+
+	MatchMap.Empty();
+}
+
+void AAIManager::CreateAgents()
+{
+	/**
+	 * This function is stable just if Agent spawns upper than the walking mesh
+	 */
+	if (!AgentToSpawn || AllNodes.Num() < 1) return;
+
+#ifdef UE_EDITOR
+	UE_LOG(LogTemp, Warning, TEXT("Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
+#endif
+	for (int32 i = 0; i < NumAI; ++i)
+	{
+		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
+		auto* SpawnNode = AllNodes[RandIndex];
+		auto* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
+			SpawnNode->Location + VerticalSpawnOffset,
+			FRotator::ZeroRotator);
+		if (Agent)
+		{
+			Agent->Manager = this;
+			Agent->CurrentNode = SpawnNode;
+			AllAgents.Add(Agent);
+		}
+	}
+}
+
+void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
+{
+	const auto SqrVolumeThreshold = Volume * Volume * 1000000;
+	for (auto& Agent : AllAgents)
+	{
+		if (FVector::DistSquared(NoisePosition, Agent->GetActorLocation()) < SqrVolumeThreshold)
+		{
+			Agent->UpdateState(AgentState::SEARCH);
+			Agent->LastNoisePosition = NoisePosition;
+			Agent->Path.Empty();
+			//#ifdef UE_EDITOR
+			//			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
+			//#endif
+		}
+	}
 }
 
 TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 {
+	if (!(StartNode && EndNode)) return TArray<NavNode*>();
+
 	if (StartNode == EndNode)
 	{
 		return TArray<NavNode*>();
 	}
 
 	TArray<NavNode*> OpenSet;
-	for (NavNode* Node : AllNodes)
+	for (auto& Node : AllNodes)
 	{
 		Node->GScore = TNumericLimits<float>::Max();
 	}
@@ -61,10 +237,12 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 			while (CurrentNode != StartNode)
 			{
 				CurrentNode = CurrentNode->CameFrom;
+#ifdef UE_EDITOR
 				if (CurrentNode->CameFrom == nullptr)
 				{
-					UE_LOG(LogTemp, Error, TEXT("NULLPTR CAME FROM"));
+					UE_LOG(LogTemp, Error, TEXT("CameFrom IS NULLPTR"));
 				}
+#endif
 				Path.Add(CurrentNode);
 			}
 			return Path;
@@ -72,7 +250,8 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 
 		for (auto& ConnectedNode : CurrentNode->ConnectedNodes)
 		{
-			//float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(), ConnectedNode->GetActorLocation());
+			//float TentativeGScore = CurrentNode->GScore + FVector::Distance(CurrentNode->GetActorLocation(),
+			// ConnectedNode->GetActorLocation());
 			float TentativeGScore = CurrentNode->GScore + ConnectedNode.Value;
 			if (TentativeGScore < ConnectedNode.Key->GScore)
 			{
@@ -87,87 +266,14 @@ TArray<NavNode*> AAIManager::GeneratePath(NavNode* StartNode, NavNode* EndNode)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("NO PATH FOUND"));
 	return TArray<NavNode*>();
-}
-
-void AAIManager::PopulateNodes()
-{
-	// Exist JUST to copy data from ANavigationNode to NavNode
-	TMap<ANavigationNode*, NavNode*> MatchMap;
-
-	// Copy Nodes of ANavigationNode to NavNode
-	for (TActorIterator<ANavigationNode> It(GetWorld()); It; ++It)
-	{
-		auto* Node = new NavNode;
-		Node->Location = It->GetActorLocation();
-
-		MatchMap.Add(*It, Node);
-
-		AllNodes.Add(Node);
-	}
-
-	// Copy ConnectedNodes of ANavigationNode to NavNode
-	for (auto& Match : MatchMap)
-	{
-		for (auto& Node : Match.Key->ConnectedNodes) // Match.Key is <ANavigationNode*>
-		{
-			if (MatchMap.Contains(Node.Key))
-			{
-				Match.Value->ConnectedNodes.Add(MatchMap[Node.Key], Node.Value);
-			}
-		}
-	}
-
-	MatchMap.Empty();
-
-	// Comment if Debug is not required
-	for (auto& Node : AllNodes)
-	{
-		//UE_LOG(LogTemp, Error, TEXT("Parent: %s"), *Node->Location.ToString());
-		for (auto& ConnectedNode : Node->ConnectedNodes)
-		{
-			//UE_LOG(LogTemp, Error, TEXT("Distance:  %f; From <%s> To <%s>"), ConnectedNode.Value, *Node->Location.ToString(), *ConnectedNode.Key->Location.ToString());
-			//UE_LOG(LogTemp, Error, TEXT("Child:  %s"), *ConnectedNode.Key->Location.ToString());
-			DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Blue, true, -1.0f, '\000', 6.0f);
-		}
-	}
-}
-
-void AAIManager::CreateAgents()
-{
-	if (AllNodes.Num() < 1) { return; } // Null error otherwise
-
-	for (int32 i = 0; i < NumAI; ++i)
-	{
-		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
-		auto Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn, AllNodes[RandIndex]->Location, FRotator::ZeroRotator);
-		Agent->Manager = this;
-		Agent->CurrentNode = AllNodes[RandIndex];
-		AllAgents.Add(Agent);
-	}
-}
-
-void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
-{
-	const auto SqrVolumeThreshold = Volume * Volume * 1000000;
-	for (auto& Agent : AllAgents)
-	{
-		if (FVector::DistSquared(NoisePosition, Agent->GetActorLocation()) < SqrVolumeThreshold)
-		{
-			Agent->UpdateState(AgentState::SEARCH);
-			Agent->LastNoisePosition = NoisePosition;
-			Agent->Path.Empty();
-			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
-		}
-	}
 }
 
 NavNode* AAIManager::FindNearestNode(const FVector& Location)
 {
 	NavNode* NearestNode = nullptr;
 	float NearestDistance = TNumericLimits<float>::Max();
-	for (NavNode* CurrentNode : AllNodes)
+	for (auto& CurrentNode : AllNodes)
 	{
 		// there is no point in making SQRT in Distance, refer to Magnitude calculation
 		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
@@ -179,7 +285,6 @@ NavNode* AAIManager::FindNearestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Nearest Node: %s"), *NearestNode->GetName());
 	return NearestNode;
 }
 
@@ -187,7 +292,7 @@ NavNode* AAIManager::FindFurthestNode(const FVector& Location)
 {
 	NavNode* FurthestNode = nullptr;
 	float FurthestDistance = 0.0f;
-	for (NavNode* CurrentNode : AllNodes)
+	for (auto& CurrentNode : AllNodes)
 	{
 		// there is no point in making SQRT in Distance, refer to Magnitude calculation
 		// float CurrentNodeDistance = FVector::Distance(Location, CurrentNode->GetActorLocation());
@@ -199,7 +304,5 @@ NavNode* AAIManager::FindFurthestNode(const FVector& Location)
 		}
 	}
 
-	//UE_LOG(LogTemp, Error, TEXT("Furthest Node: %s"), *FurthestNode->GetName());
 	return FurthestNode;
 }
-
