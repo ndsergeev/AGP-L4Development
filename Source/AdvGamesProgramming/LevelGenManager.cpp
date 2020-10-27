@@ -6,12 +6,19 @@
 ALevelGenManager::ALevelGenManager()
 {
 	PrimaryActorTick.bCanEverTick = false;
+    bReplicates = true;
+    NetDormancy = DORM_Initial;
 }
 
 void ALevelGenManager::BeginPlay()
 {
 	Super::BeginPlay();
-	GenerateLevel();
+    /**
+     * Make sure it is generated once on the server
+     */
+    if (!HasAuthority()) return;
+
+    GenerateLevel();
 }
 
 void ALevelGenManager::Tick(float DeltaTime)

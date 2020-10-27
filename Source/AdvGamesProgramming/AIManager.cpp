@@ -9,11 +9,17 @@
 AAIManager::AAIManager()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 }
 
 void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+    /**
+     * Make sure it is generated once on the server
+     */
+    if (!HasAuthority()) return;
 
 	/** ToDo:
 	 * 1. Decompose this class to AIManager and AINodeGenerator
@@ -21,7 +27,7 @@ void AAIManager::BeginPlay()
 	 */
 	auto CurrentMapName = GetWorld()->GetMapName();
 
-	if (CurrentMapName == "UEDPIE_0_ProcGenMap" || CurrentMapName == "UEDPIE_0_ProcGenMap-Matt")
+	if (CurrentMapName.Contains("ProcGenMap", ESearchCase::IgnoreCase))
 	{
 		// Procedural node generation
 		GenerateNodes();
