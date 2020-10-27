@@ -5,6 +5,7 @@
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+    bReplicates = true;
 
 	CurrentAgentState = AgentState::PATROL;
 }
@@ -30,6 +31,7 @@ void AEnemyCharacter::BeginPlay()
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+    if (!HasAuthority()) return;
 
 	switch (CurrentAgentState)
 	{
