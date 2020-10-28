@@ -229,7 +229,7 @@ void ARoom::CreateRoom()
 	//{
 	//	if (auto* WallMesh = TopWall->FindComponentByClass<UStaticMeshComponent>())
 	//	{
-	//		//WallMesh->SetWorldScale3D(FVector(GetWidth(), 1, 1));
+	//		WallMesh->SetWorldScale3D(FVector(1, GetWidth(), 1));
 	//	}
 	//}
 
@@ -239,7 +239,7 @@ void ARoom::CreateRoom()
 	//{
 	//	if (auto* WallMesh = BottomWall->FindComponentByClass<UStaticMeshComponent>())
 	//	{
-	//		//WallMesh->SetWorldScale3D(FVector(GetWidth(), 1, 1));
+	//		WallMesh->SetWorldScale3D(FVector(1, GetWidth(), 1));
 	//	}
 	//}
 
@@ -249,7 +249,7 @@ void ARoom::CreateRoom()
 	//{
 	//	if (auto* WallMesh = LeftWall->FindComponentByClass<UStaticMeshComponent>())
 	//	{
-	//		//WallMesh->SetWorldScale3D(FVector(GetHeight(), 1, 1));
+	//		WallMesh->SetWorldScale3D(FVector(1, GetHeight(), 1));
 	//	}
 	//}
 
@@ -259,7 +259,7 @@ void ARoom::CreateRoom()
 	//{
 	//	if (auto* WallMesh = RightWall->FindComponentByClass<UStaticMeshComponent>())
 	//	{
-	//		//WallMesh->SetWorldScale3D(FVector(GetHeight(), 1, 1));
+	//		WallMesh->SetWorldScale3D(FVector(1, GetHeight(), 1));
 	//	}
 	//}
 

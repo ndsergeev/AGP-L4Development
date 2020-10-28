@@ -22,6 +22,21 @@ public:
 	UPROPERTY(EditAnywhere)
 		int Bottom;
 
+	UPROPERTY(EditAnywhere)
+		int MinWidth;
+	UPROPERTY(EditAnywhere)
+		int MaxWidth;
+	UPROPERTY(EditAnywhere)
+		int MinHeight;
+	UPROPERTY(EditAnywhere)
+		int MaxHeight;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AActor> PlayerToSpawn;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AActor> FlagToSpawn;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -32,8 +47,12 @@ public:
 	TArray<ARoom*> Corridors;
 
 	void GenerateLevel();
+	void SetRandomSize();
+	ARoom* GetFurthestRoom(ARoom* StartRoom);
 
 private:
 	void TraverseRooms(ARoom* Room);
 	void LoopCorridors();
+	void SpawnPlayer(ARoom* SpawnRoom);
+	void SpawnFlag(ARoom* SpawnRoom);
 };
