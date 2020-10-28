@@ -180,7 +180,7 @@ void AEnemyCharacter::AgentEngage()
 		{
 			//UE_LOG(LogTemp, Error, TEXT("AgentEngage - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-			auto NearestActorNode = Manager->FindNearestNode(ActorLocation);
+			auto* NearestActorNode = Manager->FindNearestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, NearestActorNode);
 		}
 	}
@@ -197,7 +197,7 @@ void AEnemyCharacter::AgentEvade()
 		{
 			//UE_LOG(LogTemp, Error, TEXT("AgentEvade - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
-			auto FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
+			auto* FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, FurthestActorNode);
 		}
 	}
@@ -209,7 +209,7 @@ void AEnemyCharacter::AgentSearch()
 	{
 		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - New Path"));
 		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - NoisePosition: %s"), *LastNoisePosition.ToString());
-		auto NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
+		auto* NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
 		Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
 		bHeardActor = false;
 	}
@@ -231,7 +231,8 @@ void AEnemyCharacter::MoveAlongPath()
 		{
 			FVector WorldDirection = CurrentNode->Location - GetActorLocation();
 			WorldDirection.Normalize();
-			AddMovementInput(WorldDirection, 1.0f);
+			auto speed = CurrentAgentState != AgentState::PATROL ? 0.3f : 1.0f;
+			AddMovementInput(WorldDirection, speed);
 
 			//Get the AI to face in the direction of travel.
 			FRotator FaceDirection = WorldDirection.ToOrientationRotator();
