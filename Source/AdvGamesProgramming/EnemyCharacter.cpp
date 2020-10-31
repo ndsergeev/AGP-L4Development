@@ -1,5 +1,9 @@
 #include "EnemyCharacter.h"
 #include "EngineUtils.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Engine/Engine.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
 
 AEnemyCharacter::AEnemyCharacter()
@@ -8,6 +12,13 @@ AEnemyCharacter::AEnemyCharacter()
     bReplicates = true;
 
 	CurrentAgentState = AgentState::PATROL;
+
+    HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
+    static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
+
+    if (EnemyHealthWidgetComponent.Succeeded()) {
+        HealthWidgetComponent->SetWidgetClass(EnemyHealthWidgetComponent.Class);
+    }
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -15,22 +26,50 @@ void AEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	PerceptionComponent = FindComponentByClass<UAIPerceptionComponent>();
-	if (!PerceptionComponent)
+	if (PerceptionComponent)
 	{
-		UE_LOG(LogTemp, Error, TEXT("NO PERCEPTION COMPONENT FOUND"));
+        PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyCharacter::SensePlayer);
 	}
-	PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyCharacter::SensePlayer);
+    DetectedActor = nullptr;
+    bCanSeeActor = false;
+    bHeardActor = false;
 
-	HealthComponent = FindComponentByClass<UHealthComponent>();
+    HealthComponent = FindComponentByClass<UHealthComponent>();
 
-	DetectedActor = nullptr;
-	bCanSeeActor = false;
-	bHeardActor = false;
+    if (HealthWidgetComponent)
+    {
+        /**
+         * However, some of these might be moved to the constructor
+         */
+        HealthWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+        HealthWidgetComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+        HealthWidgetComponent->SetDrawSize(FVector2D(50, 20));
+        HealthWidgetComponent->SetRelativeLocation(FVector(0,0,100));
+        HealthWidgetComponent->SetVisibility(true);
+        HealthWidgetComponent->RegisterComponent();
+    }
+
+    auto* PlayerController = GetWorld()->GetFirstPlayerController();
+    if (PlayerController)
+    {
+        PlayerCameraManager = PlayerController->PlayerCameraManager;
+    }
 }
 
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+    if (PlayerCameraManager && HealthWidgetComponent)
+    {
+        auto RotationTowardsCamera = UKismetMathLibrary::FindLookAtRotation(HealthWidgetComponent->GetComponentLocation(),
+                                                                            PlayerCameraManager->GetCameraLocation());
+        HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
+    }
+
+    /**
+     * Make sure it is generated once on the server
+     */
     if (!HasAuthority()) return;
 
 	switch (CurrentAgentState)
@@ -57,7 +96,6 @@ void AEnemyCharacter::Tick(float DeltaTime)
 
 			break;
 		}
-
 		case (AgentState::ENGAGE):
 		{
 			AgentEngage();

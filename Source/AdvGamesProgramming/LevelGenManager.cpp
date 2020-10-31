@@ -13,6 +13,7 @@ ALevelGenManager::ALevelGenManager()
 void ALevelGenManager::BeginPlay()
 {
 	Super::BeginPlay();
+
     /**
      * Make sure it is generated once on the server
      */
@@ -118,10 +119,10 @@ void ALevelGenManager::SpawnPlayer(ARoom* SpawnRoom)
 void ALevelGenManager::SpawnFlag(ARoom* SpawnRoom)
 {
 	FVector RoomLoc = SpawnRoom->CenterLocation;
-	int offset = 400;
-	int randX = FMath::RandRange(RoomLoc.X - offset, RoomLoc.X + offset);
-	int randY = FMath::RandRange(RoomLoc.Y - offset, RoomLoc.Y + offset);
-	FVector SpawnLocation(randX, randY, 0);
+	int Offset = 400;
+	int RandX = FMath::RandRange(RoomLoc.X - Offset, RoomLoc.X + Offset);
+	int RandY = FMath::RandRange(RoomLoc.Y - Offset, RoomLoc.Y + Offset);
+	FVector SpawnLocation(RandX, RandY, 0);
 
 	FRotator Rotation(0, 0, 0);
 	FActorSpawnParameters SpawnParams;

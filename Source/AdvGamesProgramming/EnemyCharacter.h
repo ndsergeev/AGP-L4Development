@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "HealthComponent.h"
+#include "Components/WidgetComponent.h"
 #include "EnemyCharacter.generated.h"
 
 
@@ -77,4 +78,7 @@ private:
 	void MoveAlongPath();
 
 	UHealthComponent* HealthComponent;
+    UWidgetComponent* HealthWidgetComponent;
+
+    APlayerCameraManager* PlayerCameraManager;
 };
