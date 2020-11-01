@@ -11,6 +11,7 @@ AAIManager::AAIManager()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 	bAlwaysRelevant = true;
+	NetDormancy = DORM_Initial;
 }
 
 void AAIManager::BeginPlay()
@@ -179,21 +180,29 @@ void AAIManager::CreateAgents()
 	if (!AgentToSpawn || AllNodes.Num() < 1) return;
 
 #ifdef UE_EDITOR
-	UE_LOG(LogTemp, Warning, TEXT("Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
+	UE_LOG(LogTemp, Warning, TEXT("CreateAgents() - Node Number: %i, Agent: %s"), AllNodes.Num(), *AgentToSpawn->GetName());
 #endif
 	for (int32 i = 0; i < NumAI; ++i)
 	{
-		int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
-		auto* SpawnNode = AllNodes[RandIndex];
-		auto* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
-			SpawnNode->Location + VerticalSpawnOffset,
-			FRotator::ZeroRotator);
-		if (Agent)
-		{
-			Agent->Manager = this;
-			Agent->CurrentNode = SpawnNode;
-			AllAgents.Add(Agent);
-		}
+		SpawnAgent();
+	}
+}
+
+void AAIManager::SpawnAgent()
+{
+	if (!AgentToSpawn || AllNodes.Num() < 1) return;
+
+	int32 RandIndex = FMath::RandRange(0, AllNodes.Num() - 1);
+	auto* SpawnNode = AllNodes[RandIndex];
+	auto* Agent = GetWorld()->SpawnActor<AEnemyCharacter>(AgentToSpawn,
+		SpawnNode->Location + VerticalSpawnOffset,
+		FRotator::ZeroRotator);
+
+	if (Agent)
+	{
+		Agent->Manager = this;
+		Agent->CurrentNode = SpawnNode;
+		AllAgents.Add(Agent);
 	}
 }
 

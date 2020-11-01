@@ -13,12 +13,13 @@ AEnemyCharacter::AEnemyCharacter()
 
 	CurrentAgentState = AgentState::PATROL;
 
-    HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
-    static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
+	HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
+	static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
 
-    if (EnemyHealthWidgetComponent.Succeeded()) {
-        HealthWidgetComponent->SetWidgetClass(EnemyHealthWidgetComponent.Class);
-    }
+	if (EnemyHealthWidgetComponent.Succeeded())
+	{
+		HealthWidgetComponent->SetWidgetClass(EnemyHealthWidgetComponent.Class);
+	}
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -28,49 +29,63 @@ void AEnemyCharacter::BeginPlay()
 	PerceptionComponent = FindComponentByClass<UAIPerceptionComponent>();
 	if (PerceptionComponent)
 	{
-        PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyCharacter::SensePlayer);
+		PerceptionComponent->OnTargetPerceptionUpdated.AddDynamic(this, &AEnemyCharacter::SensePlayer);
 	}
-    DetectedActor = nullptr;
-    bCanSeeActor = false;
-    bHeardActor = false;
+	DetectedActor = nullptr;
+	bCanSeeActor = false;
+	bHeardActor = false;
 
-    HealthComponent = FindComponentByClass<UHealthComponent>();
+	HealthComponent = FindComponentByClass<UHealthComponent>();
+	if (HealthComponent)
+	{
+		HealthComponent->SetIsReplicated(true);
+	}
 
-    if (HealthWidgetComponent)
-    {
-        /**
-         * However, some of these might be moved to the constructor
-         */
-        HealthWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
-        HealthWidgetComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-        HealthWidgetComponent->SetDrawSize(FVector2D(50, 20));
-        HealthWidgetComponent->SetRelativeLocation(FVector(0,0,100));
-        HealthWidgetComponent->SetVisibility(true);
-        HealthWidgetComponent->RegisterComponent();
-    }
+	if (HealthWidgetComponent)
+	{
+		/**
+		 * However, some of these might be moved to the constructor
+		 */
+		HealthWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+		HealthWidgetComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		HealthWidgetComponent->SetDrawSize(FVector2D(50, 20));
+		HealthWidgetComponent->SetRelativeLocation(FVector(0, 0, 100));
+		HealthWidgetComponent->SetVisibility(true);
+		HealthWidgetComponent->RegisterComponent();
+	}
 
-    auto* PlayerController = GetWorld()->GetFirstPlayerController();
-    if (PlayerController)
-    {
-        PlayerCameraManager = PlayerController->PlayerCameraManager;
-    }
+	auto* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		PlayerCameraManager = PlayerController->PlayerCameraManager;
+	}
 }
 
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    if (PlayerCameraManager && HealthWidgetComponent)
-    {
-        auto RotationTowardsCamera = UKismetMathLibrary::FindLookAtRotation(HealthWidgetComponent->GetComponentLocation(),
-                                                                            PlayerCameraManager->GetCameraLocation());
-        HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
-    }
 
-    /**
-     * Make sure it is generated once on the server
-     */
-    if (!HasAuthority()) return;
+	if (PlayerCameraManager && HealthWidgetComponent)
+	{
+		auto RotationTowardsCamera = UKismetMathLibrary::FindLookAtRotation(HealthWidgetComponent->GetComponentLocation(),
+																			PlayerCameraManager->GetCameraLocation());
+		HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
+	}
+
+	if (HealthComponent)
+	{
+		if (HealthComponent->CurrentHealth <= 0)
+		{
+			Destroy();
+			Manager->SpawnAgent();
+		}
+	}
+
+	/**
+	 * Make sure it is generated once on the server
+	 */
+	if (!HasAuthority()) return;
 
 	switch (CurrentAgentState)
 	{
@@ -211,8 +226,11 @@ void AEnemyCharacter::AgentEngage()
 {
 	if (bCanSeeActor)
 	{
-		FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
-		Fire(DirectionToTarget);
+		if (DetectedActor != nullptr)
+		{
+			FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
+			Fire(DirectionToTarget);
+		}
 
 		if (Path.Num() == 0)
 		{

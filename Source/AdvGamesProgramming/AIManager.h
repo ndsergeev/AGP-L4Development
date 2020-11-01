@@ -57,6 +57,7 @@ public:
 	void GenerateNodes();
 	void PopulateNodes();
 	void CreateAgents();
+	void SpawnAgent();
 
 	void NotifyAgents(const FVector& NoisePosition, const float& Volume);
 

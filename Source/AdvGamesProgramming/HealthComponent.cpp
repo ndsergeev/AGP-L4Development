@@ -77,14 +77,17 @@ float UHealthComponent::HealthPercentageRemaining()
 
 void UHealthComponent::UpdateHealthBar()
 {
-	if (Cast<APawn>(GetOwner())->IsLocallyControlled())
+	if (GetOwner() != nullptr)
 	{
-		//Find the hud associated to this player
-		APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
-		if (HUD)
+		if (Cast<APawn>(GetOwner())->IsLocallyControlled())
 		{
-			//Update the progress bar widget on the players hud.
-			HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
+			//Find the hud associated to this player
+			APlayerHUD* HUD = Cast<APlayerHUD>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetHUD());
+			if (HUD)
+			{
+				//Update the progress bar widget on the players hud.
+				HUD->SetPlayerHealthBarPercent(HealthPercentageRemaining());
+			}
 		}
 	}
 }
