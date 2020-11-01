@@ -13,12 +13,17 @@ class ADVGAMESPROGRAMMING_API APropsGenerator : public AActor
 public:
 	APropsGenerator();
 
-	//UPROPERTY(EditAnywhere)
-	//	TMap<AActor*, int8> PropsToSpawn;
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AActor> BottleToSpawn;
 
-	TSubclassOf<AActor> BottleToSpawn;
 	UPROPERTY(EditAnywhere)
 		uint8 BottleNum;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<AActor> LampToSpawn;
+
+	UPROPERTY(EditAnywhere)
+		uint8 LampNum;
 
 private:
 	ALevelGenManager* LevelGenManager;
