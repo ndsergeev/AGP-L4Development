@@ -7,6 +7,7 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "HealthComponent.h"
+#include "GameFramework/HUD.h"
 #include "Components/WidgetComponent.h"
 #include "EnemyCharacter.generated.h"
 
@@ -14,71 +15,76 @@
 UENUM()
 enum class AgentState : uint8
 {
-	PATROL,
-	ENGAGE,
-	EVADE,
-	SEARCH
+    PATROL,
+    ENGAGE,
+    EVADE,
+    SEARCH
 };
 
 
 UCLASS()
 class ADVGAMESPROGRAMMING_API AEnemyCharacter : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AEnemyCharacter();
+    AEnemyCharacter();
 
-	UPROPERTY(VisibleAnywhere)
-		AgentState CurrentAgentState;
+    UPROPERTY(VisibleAnywhere)
+    AgentState CurrentAgentState;
 
-	UAIPerceptionComponent* PerceptionComponent;
+    UAIPerceptionComponent* PerceptionComponent;
 
-	UPROPERTY(VisibleAnywhere)
-		AActor* DetectedActor;
+    UPROPERTY(VisibleAnywhere)
+    AActor* DetectedActor;
 
-	UPROPERTY(VisibleAnywhere)
-		bool bCanSeeActor;
+    UPROPERTY(VisibleAnywhere)
+    bool bCanSeeActor;
 
-	UPROPERTY(VisibleAnywhere)
-		bool bHeardActor;
+    UPROPERTY(VisibleAnywhere)
+    bool bHeardActor;
 
 protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
+    virtual void Tick(float DeltaTime) override;
 
-	TArray<NavNode*> Path;
-	NavNode* CurrentNode;
-	AAIManager* Manager;
+    TArray<NavNode*> Path;
+    NavNode* CurrentNode;
+    AAIManager* Manager;
 
-	FAISenseID StimulusType;
+    FAISenseID StimulusType;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void UpdateState(AgentState NewState);
+    void SetEnemyHealthBarPercent(float Percent);
 
-	// State definitions:
-	void AgentPatrol();
-	void AgentEngage();
-	void AgentEvade();
-	void AgentSearch();
+    void UpdateState(AgentState NewState);
 
-	UFUNCTION()
-		void SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus);
+    // State definitions:
+    void AgentPatrol();
+    void AgentEngage();
+    void AgentEvade();
+    void AgentSearch();
 
-	UFUNCTION(BlueprintImplementableEvent)
-		void Fire(FVector FireDirection);
+    UFUNCTION()
+    void SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus);
 
-	UPROPERTY(VisibleAnywhere)
-		FVector LastNoisePosition;
+    UFUNCTION(BlueprintImplementableEvent)
+    void Fire(FVector FireDirection);
+
+    UPROPERTY(VisibleAnywhere)
+    FVector LastNoisePosition;
 
 private:
-	void MoveAlongPath();
+    void MoveAlongPath();
 
-	UHealthComponent* HealthComponent;
+    UHealthComponent* HealthComponent;
     UWidgetComponent* HealthWidgetComponent;
+    class UProgressBar* HealthProgressBar;
 
     APlayerCameraManager* PlayerCameraManager;
+
+    float CharacterSpeed;
 };
