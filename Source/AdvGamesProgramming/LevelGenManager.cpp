@@ -1,25 +1,25 @@
 #include "Room.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "GameFramework/PlayerStart.h"
 #include "LevelGenManager.h"
 
 ALevelGenManager::ALevelGenManager()
 {
 	PrimaryActorTick.bCanEverTick = false;
-    bReplicates = true;
-    NetDormancy = DORM_Initial;
+	bReplicates = true;
+	NetDormancy = DORM_Initial;
 }
 
 void ALevelGenManager::BeginPlay()
 {
 	Super::BeginPlay();
+	/**
+	 * Make sure it is generated once on the server
+	 */
+	if (!HasAuthority()) return;
 
-    /**
-     * Make sure it is generated once on the server
-     */
-    if (!HasAuthority()) return;
-
-    GenerateLevel();
+	GenerateLevel();
 }
 
 void ALevelGenManager::Tick(float DeltaTime)
@@ -40,6 +40,7 @@ void ALevelGenManager::GenerateLevel()
 	TraverseRooms(InitialRoom);
 	LoopCorridors();
 
+	//Add better spawning for multiple players
 	ARoom* PlayerSpawnRoom = Rooms[FMath::RandRange(0, Rooms.Num() - 1)];
 	SpawnPlayer(PlayerSpawnRoom);
 
@@ -108,24 +109,29 @@ void ALevelGenManager::LoopCorridors()
 void ALevelGenManager::SpawnPlayer(ARoom* SpawnRoom)
 {
 	FVector RoomLoc = SpawnRoom->CenterLocation;
-	FVector SpawnLocation(RoomLoc.X, RoomLoc.Y, 120);
-	FRotator Rotation(0, 0, 0);
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
+	FVector SpawnLocation(RoomLoc.X, RoomLoc.Y, 250);
 
-	GetWorld()->SpawnActor<AActor>(PlayerToSpawn, SpawnLocation, Rotation, SpawnParams);
+	//FActorSpawnParameters SpawnParams;
+	//SpawnParams.Owner = this;
+	//GetWorld()->SpawnActor<AActor>(PlayerToSpawn, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Owner = this;
+	SpawnInfo.Instigator = NULL;
+	SpawnInfo.bDeferConstruction = false;
+
+	GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), SpawnLocation, FRotator::ZeroRotator, SpawnInfo);
+	GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), SpawnLocation, FRotator::ZeroRotator, SpawnInfo);
 }
 
 void ALevelGenManager::SpawnFlag(ARoom* SpawnRoom)
 {
 	FVector RoomLoc = SpawnRoom->CenterLocation;
 	int Offset = 400;
-	int RandX = FMath::RandRange(RoomLoc.X - Offset, RoomLoc.X + Offset);
-	int RandY = FMath::RandRange(RoomLoc.Y - Offset, RoomLoc.Y + Offset);
-	FVector SpawnLocation(RandX, RandY, 0);
-
-	FRotator Rotation(0, 0, 0);
+	int RandomX = FMath::RandRange(RoomLoc.X - Offset, RoomLoc.X + Offset);
+	int RandomY = FMath::RandRange(RoomLoc.Y - Offset, RoomLoc.Y + Offset);
+	FVector SpawnLocation(RandomX, RandomY, 0);
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
-	GetWorld()->SpawnActor<AActor>(FlagToSpawn, SpawnLocation, Rotation, SpawnParams);
+	GetWorld()->SpawnActor<AActor>(FlagToSpawn, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
 }

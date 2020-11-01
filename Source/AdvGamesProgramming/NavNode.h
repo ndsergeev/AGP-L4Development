@@ -11,17 +11,17 @@
 class ADVGAMESPROGRAMMING_API NavNode
 {
 public:
-    NavNode();
+	NavNode();
 	NavNode(FVector Location);
 
 	FVector Location;
-    float GScore;
-    float HScore;
-    float FScore();
+	float GScore;
+	float HScore;
+	float FScore();
 
-    TMap <NavNode*, float> ConnectedNodes;
+	TMap <NavNode*, float> ConnectedNodes;
 
-    NavNode* CameFrom;
+	NavNode* CameFrom;
 
 	~NavNode();
 };

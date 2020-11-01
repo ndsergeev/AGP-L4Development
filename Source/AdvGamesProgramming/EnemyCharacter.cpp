@@ -9,7 +9,7 @@
 AEnemyCharacter::AEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-    bReplicates = true;
+	bReplicates = true;
 
 	CurrentAgentState = AgentState::PATROL;
 
@@ -271,15 +271,6 @@ void AEnemyCharacter::MoveAlongPath()
 			WorldDirection.Normalize();
 			auto speed = CurrentAgentState != AgentState::PATROL ? 0.3f : 1.0f;
 			AddMovementInput(WorldDirection, speed);
-
-			//if (CurrentAgentState == AgentState::PATROL)
-			//{
-			//	AddMovementInput(WorldDirection, 0.6f);
-			//}
-			//else
-			//{
-			//	AddMovementInput(WorldDirection, 1.0f);
-			//}
 
 			//Get the AI to face in the direction of travel.
 			FRotator FaceDirection = WorldDirection.ToOrientationRotator();

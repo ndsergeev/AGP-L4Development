@@ -5,6 +5,7 @@ APropsGenerator::APropsGenerator()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	bAlwaysRelevant = true;
 
 	static ConstructorHelpers::FClassFinder<AActor> BottleBlueprint(TEXT("/Game/Blueprints/Bottle_DM_Blueprint"));
 	if (!BottleBlueprint.Class)
@@ -24,7 +25,7 @@ void APropsGenerator::BeginPlay()
 	/**
 	 * Make sure it is generated once on the server
 	 */
-    if (!HasAuthority()) return;
+	if (!HasAuthority()) return;
 
 	/**
 	 * Make sure ALevelGenManager Finish its BeginPlay() function

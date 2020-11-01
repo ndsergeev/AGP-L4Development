@@ -172,9 +172,7 @@ void ARoom::CreateRoom()
 	auto HalfFloorOffset = FloorOffset / 2;
 	CenterLocation = { (Left + Right) * HalfFloorOffset, (Bottom + Top) * HalfFloorOffset, 0 };
 
-	FRotator FloorRotator(0, 0, 0);
-
-	if (auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, CenterLocation, FloorRotator, SpawnParams))
+	if (auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, CenterLocation, FRotator::ZeroRotator, SpawnParams))
 	{
 		if (auto* FloorMesh = Floor->FindComponentByClass<UStaticMeshComponent>())
 		{
@@ -182,6 +180,19 @@ void ARoom::CreateRoom()
 		}
 	}
 
+	// spawn multiple smaller floor tiles
+	//for (int x = Left; x <= Right; ++x)
+	//{
+	//	for (int y = Bottom; y <= Top; ++y)
+	//	{
+	//		FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
+	//		World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+	//	}
+	//}
+
+
+
+	if (!WallToSpawn) return;
 
 	float MinWallOffset = 0.5f;
 
@@ -196,27 +207,21 @@ void ARoom::CreateRoom()
 		FVector LeftSpawnLocation((x - MinWallOffset) * FloorOffset, (Top + WallOffset) * FloorOffset, WallHeightOffset);
 		FRotator LeftWallRotation(0, 180, 0);
 		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
-	}
 
-	for (float x = Left - MinWallOffset; x < Right + MaxHorizontalOffset; ++x)
-	{
-		FVector LeftSpawnLocation((x - MinWallOffset) * FloorOffset, (Bottom - WallOffset) * FloorOffset, WallHeightOffset);
-		FRotator LeftWallRotation(0, 0, 0);
-		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+		FVector RightSpawnLocation((x - MinWallOffset) * FloorOffset, (Bottom - WallOffset) * FloorOffset, WallHeightOffset);
+		FRotator RightWallRotation(0, 0, 0);
+		auto* RightWall = World->SpawnActor<AFloor>(WallToSpawn, RightSpawnLocation, RightWallRotation, SpawnParams);
 	}
 
 	for (float y = Bottom - MinWallOffset; y < Top + MaxVerticalOffset; ++y)
 	{
-		FVector LeftSpawnLocation((Left - WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
-		FRotator LeftWallRotation(0, -90, 0);
-		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
-	}
+		FVector TopSpawnLocation((Left - WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
+		FRotator TopWallRotation(0, -90, 0);
+		auto* TopWall = World->SpawnActor<AFloor>(WallToSpawn, TopSpawnLocation, TopWallRotation, SpawnParams);
 
-	for (float y = Bottom - MinWallOffset; y < Top + MaxVerticalOffset; ++y)
-	{
-		FVector LeftSpawnLocation((Right + WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
-		FRotator LeftWallRotation(0, 90, 0);
-		auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams);
+		FVector BottomSpawnLocation((Right + WallOffset) * FloorOffset, (y - MinWallOffset) * FloorOffset, WallHeightOffset);
+		FRotator BottomWallRotation(0, 90, 0);
+		auto* BottomWall = World->SpawnActor<AFloor>(WallToSpawn, BottomSpawnLocation, BottomWallRotation, SpawnParams);
 	}
 
 
@@ -264,16 +269,6 @@ void ARoom::CreateRoom()
 	//}
 
 
-	// spawn multiple smaller floor tiles
-
-	//for (int x = Left; x <= Right; ++x)
-	//{
-	//	for (int y = Bottom; y <= Top; ++y)
-	//	{
-	//		FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
-	//		auto* Floor = World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, Rotator, SpawnParams);
-	//	}
-	//}
 }
 
 void ARoom::Trim()

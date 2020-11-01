@@ -10,16 +10,17 @@ AAIManager::AAIManager()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	bAlwaysRelevant = true;
 }
 
 void AAIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-    /**
-     * Make sure it is generated once on the server
-     */
-    if (!HasAuthority()) return;
+	/**
+	 * Make sure it is generated once on the server
+	 */
+	if (!HasAuthority()) return;
 
 	/** ToDo:
 	 * 1. Decompose this class to AIManager and AINodeGenerator
@@ -37,6 +38,19 @@ void AAIManager::BeginPlay()
 		// Static node generation
 		PopulateNodes();
 	}
+
+	/**
+	 * Make sure ALevelGenManager Finish its BeginPlay() function
+	 */
+	TActorIterator<ALevelGenManager> It(GetWorld());
+	if (!It) return;
+
+	if (!It->HasActorBegunPlay())
+	{
+		It->DispatchBeginPlay();
+	}
+
+	LevelGenManager = *It;
 
 	CreateAgents();
 

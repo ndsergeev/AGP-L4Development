@@ -18,7 +18,7 @@ protected:
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Connected Nodes")
-        TMap <ANavigationNode*, float> ConnectedNodes;
+		TMap <ANavigationNode*, float> ConnectedNodes;
 		//TArray<ANavigationNode*> ConnectedNodes;
 
 	USceneComponent* LocationComponent;

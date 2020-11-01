@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "NavNode.h"
 #include "Room.h"
+#include "LevelGenManager.h"
 #include "AIManager.generated.h"
 
 class AEnemyCharacter;
@@ -18,6 +19,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	ALevelGenManager* LevelGenManager;
 
 public:
 	UPROPERTY(EditAnywhere, Category = "AI Properties")
