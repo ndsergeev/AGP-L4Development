@@ -16,6 +16,16 @@ APropsGenerator::APropsGenerator()
 		return;
 	}
 	BottleToSpawn = BottleBlueprint.Class;
+
+	static ConstructorHelpers::FClassFinder<AActor> LampBlueprint(TEXT("/Game/Blueprints/LampBlueprint"));
+	if (!LampBlueprint.Class)
+	{
+#ifdef UE_EDITOR
+		UE_LOG(LogTemp, Error, TEXT("Lamp Blueprint is NULL"));
+#endif
+		return;
+	}
+	LampToSpawn = LampBlueprint.Class;
 }
 
 void APropsGenerator::BeginPlay()
@@ -41,6 +51,7 @@ void APropsGenerator::BeginPlay()
 	LevelGenManager = *It;
 
 	SpawnProps(BottleToSpawn, BottleNum);
+	SpawnProps(LampToSpawn, LampNum);
 }
 
 void APropsGenerator::Tick(float DeltaTime)

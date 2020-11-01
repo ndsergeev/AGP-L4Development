@@ -16,12 +16,13 @@ AEnemyCharacter::AEnemyCharacter()
     CharacterSpeed = 1.0f;
     CurrentAgentState = AgentState::PATROL;
 
-    HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
-    static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
+	HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
+	static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
 
-    if (EnemyHealthWidgetComponent.Succeeded()) {
-        HealthWidgetComponent->SetWidgetClass(EnemyHealthWidgetComponent.Class);
-    }
+	if (EnemyHealthWidgetComponent.Succeeded())
+	{
+		HealthWidgetComponent->SetWidgetClass(EnemyHealthWidgetComponent.Class);
+	}
 }
 
 void AEnemyCharacter::BeginPlay()
@@ -72,17 +73,27 @@ void AEnemyCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (PlayerCameraManager && HealthWidgetComponent)
-    {
-        auto RotationTowardsCamera = UKismetMathLibrary::FindLookAtRotation(HealthWidgetComponent->GetComponentLocation(),
-                                                                            PlayerCameraManager->GetCameraLocation());
-        HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
-    }
 
-    /**
-     * Make sure it is generated once on the server
-     */
-    if (!HasAuthority()) return;
+	if (PlayerCameraManager && HealthWidgetComponent)
+	{
+		auto RotationTowardsCamera = UKismetMathLibrary::FindLookAtRotation(HealthWidgetComponent->GetComponentLocation(),
+																			PlayerCameraManager->GetCameraLocation());
+		HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
+	}
+
+	if (HealthComponent)
+	{
+		if (HealthComponent->CurrentHealth <= 0)
+		{
+			Destroy();
+			Manager->SpawnAgent();
+		}
+	}
+
+	/**
+	 * Make sure it is generated once on the server
+	 */
+	if (!HasAuthority()) return;
 
     switch (CurrentAgentState)
     {
