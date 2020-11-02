@@ -22,7 +22,7 @@ public:
                                           const FHitResult& SweepResult);
     /**
      * Don't remove this function it probably would be useful for counting
-     * agents who are currently in the are, the condition to finish the level
+     * agents who are currently in the area, the condition to finish the level
      * might be as in L4D all player are in a room
      * However, the function isn't stable for now
      */

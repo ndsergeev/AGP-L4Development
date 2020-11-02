@@ -16,8 +16,9 @@ AEnemyCharacter::AEnemyCharacter()
     CharacterSpeed = 1.0f;
     CurrentAgentState = AgentState::PATROL;
 
-	HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
-	static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
+    HealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>("Health Widget");
+
+    static ConstructorHelpers::FClassFinder<UUserWidget> EnemyHealthWidgetComponent(TEXT("/Game/Widgets/EnemyHUDWidget"));
 
 	if (EnemyHealthWidgetComponent.Succeeded())
 	{
@@ -227,7 +228,7 @@ void AEnemyCharacter::AgentEngage()
 {
     CharacterSpeed = 0.3f;
 
-    if (bCanSeeActor)
+    if (bCanSeeActor && DetectedActor)
     {
         FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
         Fire(DirectionToTarget);
@@ -246,7 +247,7 @@ void AEnemyCharacter::AgentEvade()
 {
     CharacterSpeed = 0.3f;
 
-    if (bCanSeeActor)
+    if (bCanSeeActor && DetectedActor)
     {
         FVector DirectionToTarget = DetectedActor->GetActorLocation() - GetActorLocation();
         Fire(DirectionToTarget);
@@ -332,6 +333,15 @@ void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 void AEnemyCharacter::SetEnemyHealthBarPercent(float Percent)
 {
     if (HealthProgressBar) {
-        HealthProgressBar->SetPercent(Percent);
+        //HealthProgressBar->SetPercent(Percent);
+        HealthProgressBar->Percent = Percent;
+
+#ifdef UE_EDITOR
+        /**
+         * Andrew, you can see from this output that the Progress bar receives the correct value
+         * If put "HealthProgressBar->Percent = 0.5f;", it shows
+         */
+        UE_LOG(LogTemp, Error, TEXT("PROGRESS: %s:\t %f"), *HealthProgressBar->GetName(), HealthProgressBar->Percent);
+#endif
     }
 }

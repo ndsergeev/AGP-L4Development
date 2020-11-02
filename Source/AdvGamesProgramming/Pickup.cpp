@@ -44,7 +44,7 @@ void APickup::OnPickupBeginOverlap(class UPrimitiveComponent* OverlappedComp,
 #ifdef UE_EDITOR
     if (OtherActor && (OtherActor != this) && OtherComp)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Overlap Begin"));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Parent Overlap"));
     }
 #endif
 }

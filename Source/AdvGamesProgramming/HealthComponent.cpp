@@ -102,6 +102,6 @@ void UHealthComponent::UpdateHealthBar()
 	if (Enemy)
     {
         Enemy->SetEnemyHealthBarPercent(HealthPercentageRemaining());
-        UE_LOG(LogTemp, Warning, TEXT("Current Health: %f AND MAX %f"), CurrentHealth, MaxHealth);
+        //UE_LOG(LogTemp, Warning, TEXT("Current Health: %f AND MAX %f"), CurrentHealth, MaxHealth);
     }
 }

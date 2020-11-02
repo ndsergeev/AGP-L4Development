@@ -77,12 +77,16 @@ public:
     UPROPERTY(VisibleAnywhere)
     FVector LastNoisePosition;
 
+    UPROPERTY(VisibleAnywhere)
+    class UProgressBar* HealthProgressBar;
+
+    UPROPERTY(VisibleAnywhere)
+    UWidgetComponent* HealthWidgetComponent;
+
 private:
     void MoveAlongPath();
 
     UHealthComponent* HealthComponent;
-    UWidgetComponent* HealthWidgetComponent;
-    class UProgressBar* HealthProgressBar;
 
     APlayerCameraManager* PlayerCameraManager;
 
