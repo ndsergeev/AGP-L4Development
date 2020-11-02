@@ -14,28 +14,34 @@ public:
 	ALevelGenManager();
 
 	UPROPERTY(EditAnywhere)
-		int Left;
-	UPROPERTY(EditAnywhere)
-		int Right;
-	UPROPERTY(EditAnywhere)
-		int Top;
-	UPROPERTY(EditAnywhere)
-		int Bottom;
+	int Left;
 
 	UPROPERTY(EditAnywhere)
-		int MinWidth;
-	UPROPERTY(EditAnywhere)
-		int MaxWidth;
-	UPROPERTY(EditAnywhere)
-		int MinHeight;
-	UPROPERTY(EditAnywhere)
-		int MaxHeight;
+	int Right;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<AActor> PlayerToSpawn;
+	int Top;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<AActor> FlagToSpawn;
+	int Bottom;
+
+	UPROPERTY(EditAnywhere)
+	int MinWidth;
+
+	UPROPERTY(EditAnywhere)
+	int MaxWidth;
+
+	UPROPERTY(EditAnywhere)
+	int MinHeight;
+
+	UPROPERTY(EditAnywhere)
+	int MaxHeight;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> PlayerToSpawn;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> FlagToSpawn;
 
 protected:
 	virtual void BeginPlay() override;

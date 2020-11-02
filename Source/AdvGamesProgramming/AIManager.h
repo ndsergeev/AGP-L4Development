@@ -24,16 +24,15 @@ protected:
 
 public:
 	UPROPERTY(EditAnywhere, Category = "AI Properties")
-		int32 NumAI;
+	int32 NumAI;
 
-	// UPROPERTY(VisibleAnywhere, Category = "Navigation Nodes")
 	TArray<NavNode*> AllNodes;
 
 	UPROPERTY(VisibleAnywhere, Category = "Agents")
-		TArray<AEnemyCharacter*> AllAgents;
+	TArray<AEnemyCharacter*> AllAgents;
 
 	UPROPERTY(EditAnywhere, Category = "Agents")
-		TSubclassOf<AEnemyCharacter> AgentToSpawn;
+	TSubclassOf<AEnemyCharacter> AgentToSpawn;
 
 private:
 	const FVector VerticalSpawnOffset = FVector(0, 0, 50);

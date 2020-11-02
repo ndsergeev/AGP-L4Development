@@ -41,20 +41,20 @@ public:
 	void OnDeath();
 
 	UFUNCTION(Server, Reliable)
-		void ServerSprintStart();
+	void ServerSprintStart();
 
 	UFUNCTION(Server, Reliable)
-		void ServerSprintEnd();
+	void ServerSprintEnd();
 
 	UFUNCTION(Client, Reliable)
-		void HidePlayerHUD(bool bSetHUDVisibility);
+	void HidePlayerHUD(bool bSetHUDVisibility);
 
 private:
 	UPROPERTY(EditInstanceOnly, meta = (ClampMin = "0.0", ClampMax = "2.0", UIMin = "0.0", UIMax = "2.0"))
-		float LookSensitivity;
+	float LookSensitivity;
 
 	UPROPERTY(EditInstanceOnly)
-		float SprintMultiplier;
+	float SprintMultiplier;
 
 	UCameraComponent* Camera;
 };

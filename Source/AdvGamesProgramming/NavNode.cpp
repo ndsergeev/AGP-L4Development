@@ -20,6 +20,7 @@ NavNode::~NavNode()
 	delete this;
 }
 
-float NavNode::FScore() {
+float NavNode::FScore()
+{
 	return GScore + HScore;
 }

@@ -25,20 +25,20 @@ public:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-		float MaxHealth;
+	float MaxHealth;
 
 	UPROPERTY(ReplicatedUsing = UpdateHealthBar, BlueprintReadOnly)
-		float CurrentHealth;
+	float CurrentHealth;
 
 	UFUNCTION(BlueprintCallable)
-		void OnTakeDamage(float Damage);
+	void OnTakeDamage(float Damage);
 
 	UFUNCTION(BlueprintCallable)
-		void OnDeath();
+	void OnDeath();
 
 	float HealthPercentageRemaining();
 
 private:
 	UFUNCTION()
-		void UpdateHealthBar();
+	void UpdateHealthBar();
 };

@@ -23,5 +23,5 @@ public:
 
 private:
 	UPROPERTY(EditInstanceOnly)
-		float RotSpeed;
+	float RotSpeed;
 };

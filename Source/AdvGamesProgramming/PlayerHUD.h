@@ -27,7 +27,7 @@ public:
 	 * @param MagazineSize: The number of rounds in a full magazine
 	 */
 	UFUNCTION(BlueprintCallable)
-		void SetAmmoText(int32 RoundsRemaining, int32 MagazineSize);
+	void SetAmmoText(int32 RoundsRemaining, int32 MagazineSize);
 
 	/**
 	 * Hides or shows the widgets in the hud.

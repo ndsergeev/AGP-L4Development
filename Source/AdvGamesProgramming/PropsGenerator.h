@@ -14,16 +14,16 @@ public:
 	APropsGenerator();
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<AActor> BottleToSpawn;
+	TSubclassOf<AActor> BottleToSpawn;
 
 	UPROPERTY(EditAnywhere)
-		uint8 BottleNum;
+	uint8 BottleNum;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<AActor> LampToSpawn;
+	TSubclassOf<AActor> LampToSpawn;
 
 	UPROPERTY(EditAnywhere)
-		uint8 LampNum;
+	uint8 LampNum;
 
 private:
 	ALevelGenManager* LevelGenManager;

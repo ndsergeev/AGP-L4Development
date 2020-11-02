@@ -20,19 +20,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(VisibleAnywhere)
-		int Left;
+	int Left;
 
 	UPROPERTY(VisibleAnywhere)
-		int Right;
+	int Right;
 
 	UPROPERTY(VisibleAnywhere)
-		int Top;
+	int Top;
 
 	UPROPERTY(VisibleAnywhere)
-		int Bottom;
+	int Bottom;
 
 	UPROPERTY(VisibleAnywhere)
-		FVector CenterLocation;
+	FVector CenterLocation;
 
 	/**
 	 * Sorry, for this ugly solution, but because Corridors
@@ -44,7 +44,7 @@ public:
 	bool bIsCorridor = false;
 
 	UPROPERTY(VisibleAnywhere)
-		TArray<FVector> DoorwayLocations;
+	TArray<FVector> DoorwayLocations;
 
 	const float FloorOffset = 200;
 	const int MinWidth = 8;
@@ -60,16 +60,16 @@ public:
 	bool IsVerticalSplit = false;
 
 	UPROPERTY(EditAnywhere)
-		ARoom* LeftRoom;
+	ARoom* LeftRoom;
 
 	UPROPERTY(EditAnywhere)
-		ARoom* RightRoom;
+	ARoom* RightRoom;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<class AFloor> FloorToSpawn;
+	TSubclassOf<class AFloor> FloorToSpawn;
 
 	UPROPERTY(EditAnywhere)
-		TSubclassOf<class AFloor> WallToSpawn;
+	TSubclassOf<class AFloor> WallToSpawn;
 
 	void SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom);
 	int GetWidth();

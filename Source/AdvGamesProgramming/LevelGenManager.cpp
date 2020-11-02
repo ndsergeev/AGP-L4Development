@@ -29,7 +29,7 @@ void ALevelGenManager::Tick(float DeltaTime)
 
 void ALevelGenManager::GenerateLevel()
 {
-	//SetRandomSize();
+	SetRandomSize();
 
 	auto* InitialRoom = GetWorld()->SpawnActor<ARoom>();
 	InitialRoom->SetSize(Left, Right, Top, Bottom);

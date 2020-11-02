@@ -19,7 +19,7 @@ public:
 	void Respawn(AController* Controller);
 
 	UFUNCTION()
-		void TriggerRespawn(AController* Controller);
+	void TriggerRespawn(AController* Controller);
 
 private:
 
