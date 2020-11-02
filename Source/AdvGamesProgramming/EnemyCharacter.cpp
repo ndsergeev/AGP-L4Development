@@ -81,15 +81,6 @@ void AEnemyCharacter::Tick(float DeltaTime)
 		HealthWidgetComponent->SetWorldRotation(RotationTowardsCamera);
 	}
 
-	if (HealthComponent)
-	{
-		if (HealthComponent->CurrentHealth <= 0)
-		{
-			Destroy();
-			Manager->SpawnAgent();
-		}
-	}
-
 	/**
 	 * Make sure it is generated once on the server
 	 */

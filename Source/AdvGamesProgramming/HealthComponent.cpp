@@ -70,6 +70,7 @@ void UHealthComponent::OnDeath()
         UE_LOG(LogTemp, Warning, TEXT("ENEMY IS DEAD"));
 #endif
         EnemyCharacter->Manager->AllAgents.Remove(EnemyCharacter);
+        EnemyCharacter->Manager->SpawnAgent();
         EnemyCharacter->Destroy();
     }
 }
