@@ -19,30 +19,29 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+	/**
+	* Left, Right, Top, Bottom are the bounding locations for the Room's size
+	*/
 	UPROPERTY(VisibleAnywhere)
 	int Left;
-
 	UPROPERTY(VisibleAnywhere)
 	int Right;
-
 	UPROPERTY(VisibleAnywhere)
 	int Top;
-
 	UPROPERTY(VisibleAnywhere)
 	int Bottom;
 
+	/**
+	* We often need to access the Room's Vector center, not just coordinate center
+	*/
 	UPROPERTY(VisibleAnywhere)
 	FVector CenterLocation;
 
-	/**
-	 * Sorry, for this ugly solution, but because Corridors
-	 * aren't inherited from the ARoom base class I have to
-	 * use it, I know that my solution makes it even uglier.
-	 * Here is the map for each corridor with the
-	 * rooms it intersects and the coordinates.
-	 */
 	bool bIsCorridor = false;
 
+	/**
+	* Save where the connected corridors are
+	*/
 	UPROPERTY(VisibleAnywhere)
 	TArray<FVector> DoorwayLocations;
 
@@ -52,24 +51,26 @@ public:
 	const int MinHeight = 8;
 	const int MaxHeight = 30;
 
-	const int TrimTiles = 1;
-	const int CorridorMargin = 2;
+	const int TrimTiles = 1; // We need to make each room slightly smaller to add walls properly
+	const int CorridorMargin = 2; // Keep a margin between room corners and corridors
 	const int MinCorridorThickness = 2;
 
 	bool IsHorizontalSplit = false;
 	bool IsVerticalSplit = false;
 
+	/**
+	* Save child rooms
+	*/
 	UPROPERTY(EditAnywhere)
 	ARoom* LeftRoom;
-
 	UPROPERTY(EditAnywhere)
 	ARoom* RightRoom;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AFloor> FloorToSpawn;
+	TSubclassOf<class AFloor> FloorToSpawn; // The Floor Blueprint to spawn
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AFloor> WallToSpawn;
+	TSubclassOf<class AFloor> WallToSpawn; // The Wall Blueprint to spawn
 
 	void SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom);
 	int GetWidth();

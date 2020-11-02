@@ -209,7 +209,6 @@ void AEnemyCharacter::UpdateState(AgentState NewState)
 			break;
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("New Agent State: %s"), *State);
 	CurrentAgentState = NewState;
 }
 
@@ -219,7 +218,6 @@ void AEnemyCharacter::AgentPatrol()
 
 	if (Path.Num() == 0 && Manager)
 	{
-		//UE_LOG(LogTemp, Error, TEXT("AgentPatrol - New Path"));
 		Path = Manager->GeneratePath(CurrentNode, Manager->AllNodes[FMath::RandRange(0, Manager->AllNodes.Num() - 1)]);
 	}
 }
@@ -235,7 +233,6 @@ void AEnemyCharacter::AgentEngage()
 
 		if (Path.Num() == 0)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("AgentEngage - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
 			auto* NearestActorNode = Manager->FindNearestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, NearestActorNode);
@@ -254,7 +251,6 @@ void AEnemyCharacter::AgentEvade()
 
 		if (Path.Num() == 0)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("AgentEvade - New Path"));
 			FVector ActorLocation = DetectedActor->GetActorLocation();
 			auto* FurthestActorNode = Manager->FindFurthestNode(ActorLocation);
 			Path = Manager->GeneratePath(CurrentNode, FurthestActorNode);
@@ -266,9 +262,8 @@ void AEnemyCharacter::AgentSearch()
 {
 	CharacterSpeed = 1.0f;
 
-	if (Path.Num() == 0) // && bHeardActor
+	if (Path.Num() == 0)
 	{
-		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - New Path"));
 		//UE_LOG(LogTemp, Error, TEXT("AgentSearch - NoisePosition: %s"), *LastNoisePosition.ToString());
 		auto* NearestNoiseNode = Manager->FindNearestNode(LastNoisePosition);
 		Path = Manager->GeneratePath(CurrentNode, NearestNoiseNode);
@@ -280,7 +275,6 @@ void AEnemyCharacter::MoveAlongPath()
 {
 	if (Path.Num() > 0 && Manager)
 	{
-		//UE_LOG(LogTemp, Display, TEXT("Current Node: %s"), *CurrentNode->GetName());
 		if ((GetActorLocation() - CurrentNode->Location).IsNearlyZero(100.0f))
 		{
 			CurrentNode = Path.Pop();
@@ -297,7 +291,6 @@ void AEnemyCharacter::MoveAlongPath()
 			FRotator FaceDirection = WorldDirection.ToOrientationRotator();
 			FaceDirection.Roll = 0.f;
 			FaceDirection.Pitch = 0.f;
-			//FaceDirection.Yaw -= 90.0f;
 			SetActorRotation(FaceDirection);
 		}
 	}
@@ -305,7 +298,6 @@ void AEnemyCharacter::MoveAlongPath()
 
 void AEnemyCharacter::SensePlayer(AActor* ActorSensed, FAIStimulus Stimulus)
 {
-	//UE_LOG(LogTemp, Display, TEXT("Stimulus Type: %s"), *Stimulus.Type.Name.ToString());
 	StimulusType = Stimulus.Type; // Will be 'Default__AISense_Sight' or 'Default__AISense_Hearing'
 
 	if (Stimulus.WasSuccessfullySensed())

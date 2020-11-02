@@ -20,6 +20,9 @@ void AFlagPickup::OnPickupBeginOverlap(class UPrimitiveComponent* OverlappedComp
 	if (Cast<APlayerCharacter>(OtherActor))
 	{
 #ifdef UE_EDITOR
+		/**
+		 * Make sure it is generated once on the server
+		 */
 		if (OtherActor && (OtherActor != this) && OtherComp && HasAuthority())
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Player Entered Finish"));

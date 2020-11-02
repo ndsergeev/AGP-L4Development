@@ -60,7 +60,7 @@ void APropsGenerator::Tick(float DeltaTime)
 }
 
 /**
- * Function to spawn passed subclass (preferably BPs)
+ * Spawn N of passed subclass (preferably blueprints) in random rooms
  */
 void APropsGenerator::SpawnProps(TSubclassOf<AActor> A, uint8 N)
 {
@@ -82,6 +82,9 @@ void APropsGenerator::SpawnProps(TSubclassOf<AActor> A, uint8 N)
 	}
 }
 
+/**
+ * Spawn N of passed subclass (preferably blueprints) in every rooms
+ */
 void APropsGenerator::SpawnPropsEveryRoom(TSubclassOf<AActor> A, uint8 N)
 {
 	TArray<ARoom*> Rooms = LevelGenManager->Rooms;

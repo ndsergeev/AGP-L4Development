@@ -35,15 +35,12 @@ void APlayerCharacter::BeginPlay()
 	{
 		HealthComponent->SetIsReplicated(true);
 	}
-
-	//Set the rounds remaining and health hud components
 }
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called to bind functionality to input
@@ -120,7 +117,6 @@ void APlayerCharacter::OnDeath()
 			GameMode->Respawn(GetController());
 		}
 	}
-
 }
 
 void APlayerCharacter::HidePlayerHUD_Implementation(bool bSetHUDVisibility)

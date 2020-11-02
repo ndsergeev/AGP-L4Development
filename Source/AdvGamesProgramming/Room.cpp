@@ -42,10 +42,6 @@ void ARoom::Tick(float DeltaTime)
 
 void ARoom::SetSize(int NewLeft, int NewRight, int NewTop, int NewBottom)
 {
-#ifdef UE_EDITOR
-	//UE_LOG(LogTemp, Warning, TEXT("Set Size: %d %d %d %d"), NewLeft, NewRight, NewTop, NewBottom);
-#endif
-
 	this->Left = NewLeft;
 	this->Right = NewRight;
 	this->Top = NewTop;
@@ -62,6 +58,9 @@ int ARoom::GetHeight()
 	return Top - Bottom + 1;
 }
 
+/**
+* Recursively split this room at a random vertical or horizontal location
+*/
 void ARoom::Split()
 {
 	// Attempt random split
@@ -133,11 +132,17 @@ void ARoom::VerticalSplit()
 	}
 }
 
+/**
+* If this room has no children
+*/
 bool ARoom::IsLeaf() const
 {
 	return !IsHorizontalSplit && !IsVerticalSplit;
 }
 
+/**
+* Draw this room if there are no children, or recursively call DrawRoom() until a child can draw
+*/
 void ARoom::DrawRoom()
 {
 	if (IsLeaf())
@@ -159,6 +164,9 @@ void ARoom::DrawRoom()
 	}
 }
 
+/**
+* Generate the Room in the level
+*/
 void ARoom::CreateRoom()
 {
 	if (!FloorToSpawn) return;
@@ -179,17 +187,6 @@ void ARoom::CreateRoom()
 			FloorMesh->SetWorldScale3D(FVector(GetWidth(), GetHeight(), 1));
 		}
 	}
-
-	// spawn multiple smaller floor tiles
-	//for (int x = Left; x <= Right; ++x)
-	//{
-	//	for (int y = Bottom; y <= Top; ++y)
-	//	{
-	//		FVector SpawnLocation(x * FloorOffset, y * FloorOffset, 0);
-	//		World->SpawnActor<AFloor>(FloorToSpawn, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-	//	}
-	//}
-
 
 
 	if (!WallToSpawn) return;
@@ -223,52 +220,6 @@ void ARoom::CreateRoom()
 		FRotator BottomWallRotation(0, 90, 0);
 		auto* BottomWall = World->SpawnActor<AFloor>(WallToSpawn, BottomSpawnLocation, BottomWallRotation, SpawnParams);
 	}
-
-
-
-	// Generate 1 mesh per wall, and scale it: (no doors)
-
-	//FVector TopSpawnLocation(CenterLocation.X, (Top + WallOffset) * FloorOffset, WallHeightOffset);
-	//FRotator TopWallRotation(0, 180, 0);
-	//if (auto* TopWall = World->SpawnActor<AFloor>(WallToSpawn, TopSpawnLocation, TopWallRotation, SpawnParams))
-	//{
-	//	if (auto* WallMesh = TopWall->FindComponentByClass<UStaticMeshComponent>())
-	//	{
-	//		WallMesh->SetWorldScale3D(FVector(1, GetWidth(), 1));
-	//	}
-	//}
-
-	//FVector BottomSpawnLocation(CenterLocation.X, (Bottom - WallOffset) * FloorOffset, WallHeightOffset);
-	//FRotator BottomWallRotation(0, 0, 0);
-	//if (auto* BottomWall = World->SpawnActor<AFloor>(WallToSpawn, BottomSpawnLocation, BottomWallRotation, SpawnParams))
-	//{
-	//	if (auto* WallMesh = BottomWall->FindComponentByClass<UStaticMeshComponent>())
-	//	{
-	//		WallMesh->SetWorldScale3D(FVector(1, GetWidth(), 1));
-	//	}
-	//}
-
-	//FVector LeftSpawnLocation((Left - WallOffset) * FloorOffset, CenterLocation.Y, WallHeightOffset);
-	//FRotator LeftWallRotation(0, -90, 0);
-	//if (auto* LeftWall = World->SpawnActor<AFloor>(WallToSpawn, LeftSpawnLocation, LeftWallRotation, SpawnParams))
-	//{
-	//	if (auto* WallMesh = LeftWall->FindComponentByClass<UStaticMeshComponent>())
-	//	{
-	//		WallMesh->SetWorldScale3D(FVector(1, GetHeight(), 1));
-	//	}
-	//}
-
-	//FVector RightSpawnLocation((Right + WallOffset) * FloorOffset, CenterLocation.Y, WallHeightOffset);
-	//FRotator RightWallRotation(0, 90, 0);
-	//if (auto* RightWall = World->SpawnActor<AFloor>(WallToSpawn, RightSpawnLocation, RightWallRotation, SpawnParams))
-	//{
-	//	if (auto* WallMesh = RightWall->FindComponentByClass<UStaticMeshComponent>())
-	//	{
-	//		WallMesh->SetWorldScale3D(FVector(1, GetHeight(), 1));
-	//	}
-	//}
-
-
 }
 
 void ARoom::Trim()
@@ -452,6 +403,10 @@ TArray<FVector> ARoom::GetIntersectionGroups(TArray<int> Points)
 	return Groups;
 }
 
+/**
+* Recursively add connecting corridors between rooms.
+* This checks for what type of split the room has, and finds connecting points between it's child rooms.
+*/
 void ARoom::AddCorridors()
 {
 	if (IsLeaf()) return;
@@ -477,7 +432,6 @@ void ARoom::AddCorridors()
 
 			if (Groups.Num() > 0)
 			{
-				//FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 				for (auto& p : Groups)
 				{
 
@@ -485,13 +439,11 @@ void ARoom::AddCorridors()
 					int NewRight = LeftRoom->Right + 2;
 					int NewTop = p.Y;
 					int NewBottom = p.X;
+
 					auto* Corridor = GetWorld()->SpawnActor<ARoom>();
 					Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 					Corridor->DrawRoom();
 
-					/**
-					 * Here LeftRoom or RightRoom might be not leaves
-					 */
 					Corridor->bIsCorridor = true;
 					Corridor->DoorwayLocations.Add(FVector(NewRight, float(NewTop + NewBottom) / 2, 0) * FloorOffset);
 					Corridor->DoorwayLocations.Add(FVector(NewLeft, float(NewTop + NewBottom) / 2, 0) * FloorOffset);
@@ -507,20 +459,17 @@ void ARoom::AddCorridors()
 
 			if (Groups.Num() > 0)
 			{
-				//FVector p = Groups[FMath::RandRange(0, Groups.Num() - 1)];
 				for (auto& p : Groups)
 				{
 					int NewLeft = p.X;
 					int NewRight = p.Y;
 					int NewTop = LeftRoom->Bottom + 1;
 					int NewBottom = LeftRoom->Bottom - 2;
+
 					auto* Corridor = GetWorld()->SpawnActor<ARoom>();
 					Corridor->SetSize(NewLeft, NewRight, NewTop, NewBottom);
 					Corridor->DrawRoom();
 
-					/**
-					 * Here LeftRoom or RightRoom might be not leaves
-					 */
 					Corridor->bIsCorridor = true;
 					Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2, NewTop, 0) * FloorOffset);
 					Corridor->DoorwayLocations.Add(FVector(float(NewLeft + NewRight) / 2, NewBottom, 0) * FloorOffset);

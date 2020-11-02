@@ -14,6 +14,7 @@ ALevelGenManager::ALevelGenManager()
 void ALevelGenManager::BeginPlay()
 {
 	Super::BeginPlay();
+
 	/**
 	 * Make sure it is generated once on the server
 	 */

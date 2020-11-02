@@ -23,10 +23,6 @@ void AAIManager::BeginPlay()
 	 */
 	if (!HasAuthority()) return;
 
-	/** ToDo:
-	 * 1. Decompose this class to AIManager and AINodeGenerator
-	 * 2. Make better map checker
-	 */
 	auto CurrentMapName = GetWorld()->GetMapName();
 
 	if (CurrentMapName.Contains("ProcGenMap", ESearchCase::IgnoreCase))
@@ -216,9 +212,9 @@ void AAIManager::NotifyAgents(const FVector& NoisePosition, const float& Volume)
 			Agent->UpdateState(AgentState::SEARCH);
 			Agent->LastNoisePosition = NoisePosition;
 			Agent->Path.Empty();
-			//#ifdef UE_EDITOR
-			//			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
-			//#endif
+#ifdef UE_EDITOR
+			UE_LOG(LogTemp, Error, TEXT("AAIManager::NotifyAgents: NoisePosition: %s"), *NoisePosition.ToString());
+#endif
 		}
 	}
 }
