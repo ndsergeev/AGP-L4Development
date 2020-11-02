@@ -60,7 +60,7 @@ void AAIManager::BeginPlay()
 	{
 		for (auto& ConnectedNode : Node->ConnectedNodes)
 		{
-			DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Black, true, -1.0f, '\000', 10.0f);
+			//DrawDebugLine(GetWorld(), Node->Location, ConnectedNode.Key->Location, FColor::Black, true, -1.0f, '\000', 10.0f);
 		}
 	}
 #endif
