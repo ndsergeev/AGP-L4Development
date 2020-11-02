@@ -35,5 +35,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SpawnProps(TSubclassOf<AActor> A, uint8 N);
+	void SpawnPropsEveryRoom(TSubclassOf<AActor> A, uint8 N);
 
 };
