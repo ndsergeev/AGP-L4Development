@@ -10,4 +10,4 @@
 
 Currently Multiplayer and other polishments are under development
 
-![Screenshot](https://github.com/ndsergeev/AGP-L4Development/blob/Documentation/screenshot.jpg)
+![Screenshot](https://github.com/ndsergeev/AGP-L4Development/blob/master/screenshot.jpg)
